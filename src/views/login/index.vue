@@ -152,12 +152,17 @@ export default {
         this.$refs.password.focus()
       })
     },
+    // 处理登录逻辑
     handleLogin() {
+      // 对表单数据进行校验
       this.$refs.loginForm.validate(valid => {
+        // 对用户名和密码做合法校验  这里仅仅是前端验证
         if (valid) {
           this.loading = true
+          // 调用登录的方法
           this.$store.dispatch('user/login', this.loginForm)
             .then(() => {
+              // 如果登录后端验证成功，则跳转到系统主页
               this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
               this.loading = false
             })
@@ -165,6 +170,7 @@ export default {
               this.loading = false
             })
         } else {
+          // 数据校验未通过
           console.log('error submit!!')
           return false
         }

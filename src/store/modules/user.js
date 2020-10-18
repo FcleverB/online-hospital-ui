@@ -29,12 +29,16 @@ const mutations = {
 }
 
 const actions = {
-  // user login
+  // 用户登录
   login({ commit }, userInfo) {
+    // 从userInfo中取出用户名和密码
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
+      // 调用api/user.js中的方法，向后端发送请求
       login({ username: username.trim(), password: password }).then(response => {
         const { data } = response
+        // 登录成功后，从响应数据中获取token，保存到Vuex中
+        // commit调用了mutations中的SET_TOKEN方法保存了token信息
         commit('SET_TOKEN', data.token)
         setToken(data.token)
         resolve()
@@ -44,7 +48,7 @@ const actions = {
     })
   },
 
-  // get user info
+  // 获取用户信息
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
       getInfo(state.token).then(response => {
@@ -60,10 +64,13 @@ const actions = {
         if (!roles || roles.length <= 0) {
           reject('getInfo: roles must be a non-null array!')
         }
-
+        // 获取角色
         commit('SET_ROLES', roles)
+        // 获取用户名
         commit('SET_NAME', name)
+        // 获取头像
         commit('SET_AVATAR', avatar)
+        // 获取介绍
         commit('SET_INTRODUCTION', introduction)
         resolve(data)
       }).catch(error => {
@@ -72,13 +79,17 @@ const actions = {
     })
   },
 
-  // user logout
+  // 退出登录
   logout({ commit, state, dispatch }) {
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {
+        // 清空了token信息（在Vuex中）
         commit('SET_TOKEN', '')
+        // 清空了角色信息（在Vuex中）
         commit('SET_ROLES', [])
+        // 删除token
         removeToken()
+        // 重置路由
         resetRouter()
 
         // reset visited views and cached views
