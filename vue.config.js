@@ -13,7 +13,7 @@ const name = defaultSettings.title || 'vue Element Admin' // page title
 // For example, Mac: sudo npm run
 // You can change the port by the following method:
 // port = 9527 npm run dev OR npm run dev --port = 9527
-// 直接修改此处配置或者
+// 修改项目的访问端口，如果为80，浏览器地址栏默认不显示
 const port = process.env.port || process.env.npm_config_port || 80 // dev port
 
 // All configuration item explanations can be find in https://cli.vuejs.org/config/
@@ -37,7 +37,18 @@ module.exports = {
       warnings: false,
       errors: true
     },
-    before: require('./mock/mock-server.js')
+    // 这里提供了模拟数据，后期删除
+    // before: require('./mock/mock-server.js')
+    // 跨域代理配置
+    proxy: {
+      [process.env.VUE_APP_BASE_API]: {
+        target: 'http://127.0.0.1:8080/', // 地址为后端服务器的地址
+        changeOrigin: true,
+        pathRewrite: {
+          ['^' + process.env.VUE_APP_BASE_API]: ''
+        }
+      }
+    }
   },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that

@@ -30,18 +30,24 @@ router.beforeEach(async(to, from, next) => {
     } else {
       // 如果请求路由不是去往登录页面，那么就需要判断当前用户的角色，来决定能否跳转到目标路由
       // 确定用户是否通过getInfo获得了他的角色
-      const hasRoles = store.getters.roles && store.getters.roles.length > 0
+      // const hasRoles = store.getters.roles && store.getters.roles.length > 0
+      // 目前角色都是空的，所以先以用户名来判断
+      const hasUsername = store.getters.name !== ''
       // 如果已经获得了角色，那么就可以跳转到目标路由
-      if (hasRoles) {
+      // -- 如果用户名不为空，表示已经登录过
+      if (hasUsername) {
         next()
       } else {
         // 如果没有对应的角色，那么就需要请求后台获取用户信息和权限信息
         try {
           // 说明：角色必须是一个对象数组类型，比如【‘admin’】或者【‘developer’，‘editor’】
-          const { roles } = await store.dispatch('user/getInfo')
+          // const { roles } = await store.dispatch('user/getInfo')
+          await store.dispatch('user/getInfo')
 
           // 基于角色生成动态路由【菜单和权限】
-          const accessRoutes = await store.dispatch('permission/generateRoutes', roles)
+          // 默认先给一个admin权限
+          // const accessRoutes = await store.dispatch('permission/generateRoutes', ['admin'])
+          const accessRoutes = await store.dispatch('menu/getMenus')
 
           // 动态添加路由
           router.addRoutes(accessRoutes)

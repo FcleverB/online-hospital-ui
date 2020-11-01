@@ -4,7 +4,7 @@ import request from '@/utils/request'
 export function login(data) {
   // 向后端发送了一个post请求
   return request({
-    url: '/vue-element-admin/user/login',
+    url: '/login/doLogin',
     method: 'post',
     data // data是username和password
   })
@@ -13,16 +13,24 @@ export function login(data) {
 // 登录成功之后获取用户信息的接口
 export function getInfo(token) {
   return request({
-    url: '/vue-element-admin/user/info',
+    url: '/login/getInfo',
     method: 'get',
     params: { token }
+  })
+}
+
+// 加载菜单信息
+export function getMenus() {
+  return request({
+    url: '/login/getMenus',
+    method: 'get'
   })
 }
 
 // 退出登录的接口
 export function logout() {
   return request({
-    url: '/vue-element-admin/user/logout',
+    url: '/login/logout',
     method: 'post'
   })
 }

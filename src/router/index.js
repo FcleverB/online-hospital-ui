@@ -53,6 +53,7 @@ export const constantRoutes = [
     ]
   }
 ]
+// 动态路由(异步）
 export const asyncRoutes = [
   // 系统管理
   {
@@ -369,6 +370,7 @@ export const asyncRoutes = [
     ]
   }
 ]
+// 常量路由
 export const lastRoute = [
   {
     path: '/dict',

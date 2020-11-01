@@ -50,9 +50,11 @@ const actions = {
   generateRoutes({ commit }, roles) {
     return new Promise(resolve => {
       let accessedRoutes
+      // 如果角色包含admin，那就进行动态路由
       if (roles.includes('admin')) {
         accessedRoutes = asyncRoutes || []
       } else {
+        // 否则进行过滤
         accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
       }
       commit('SET_ROUTES', accessedRoutes)
