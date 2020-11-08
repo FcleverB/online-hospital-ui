@@ -1,0 +1,333 @@
+<!--字典类型页面-->
+<template>
+  <div class="app-container">
+    <!--查询条件开始-->
+    <!--
+      ref:
+      model:绑定查询条件部分的数据绑定,与queryParams有关,点击查询按钮时,将查询参数传递到后台
+      inline:变为行内域
+      label-width:设置每个标签的宽度,指定在el-form上时,其直接子标签form-item会继承该值
+    -->
+    <el-form ref="queryForm" :model="queryParams" :inline="true" label-width="68px">
+      <el-form-item label="字典名称" prop="dictName">
+        <!--input输入框
+          v-model:指定与queryParams中哪个属性进行动态绑定
+          placeholder:输入框内默认填充的数据,获得焦点后消失
+          clearable:是否可以一键清除
+          size:输入框大小,影响内容大小
+        -->
+        <el-input
+          v-model="queryParams.dictName"
+          placeholder="请输入字典名称"
+          clearable
+          size="small"
+          style="width:140px"
+        />
+      </el-form-item>
+      <el-form-item label="字典类型" prop="dictType">
+        <el-input
+          v-model="queryParams.dictType"
+          placeholder="请输入字典类型"
+          clearable
+          size="small"
+          style="width:140px"
+        />
+      </el-form-item>
+      <el-form-item label="状态" prop="status">
+        <!--select下拉框-->
+        <el-select
+          v-model="queryParams.status"
+          placeholder="字典状态"
+          clearable
+          size="small"
+          style="width:140px"
+        >
+          <!--下拉框内容,遍历statusOptions属性,这里面保存了查询的状态的码表
+            key:唯一标注
+            label:标签
+            value:实际存储的值
+          -->
+          <el-option
+            v-for="dict in statusOptions"
+            :key="dict.dictValue"
+            :label="dict.dictLabel"
+            :value="dict.dictValue"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="创建时间">
+        <!--date-picker:日期选择框
+          value-format:日期格式
+          type:类型,这里是可以选取范围数据
+          range-separator:分隔符,页面显示中会把开始日期和结束日期用该符号分割开
+          start-placeholder:第一个空的默认显示内容
+          end-placeholder:第二个空的默认显示内容
+        -->
+        <el-date-picker
+          v-model="dateRange"
+          size="small"
+          style="width:280px"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        />
+      </el-form-item>
+      <el-form-item>
+        <!--查询和清空按钮-->
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">查询</el-button>
+        <el-button type="primary" icon="el-icon-refresh" size="mini" @click="resetQuery">清空</el-button>
+      </el-form-item>
+    </el-form>
+    <!--查询条件结束-->
+    <!--操作栏按钮开始-->
+    <!--el-row:表示一行数据
+      gutter:每一栏之间的间隔
+    -->
+    <el-row :gutter="10" style="margin-bottom: 8px;">
+      <!--el-col:表示一列
+        span:指定该列所占的宽度,最大指定为24
+      -->
+      <el-col :span="1.5">
+        <!--新增按钮:尺寸mini-->
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <!--修改按钮:只有在选中一条记录的时候,才会处于可用状态-->
+        <el-button type="success" icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate">修改</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <!--删除按钮,只要有选中数据就可用,不管一条还是多条-->
+        <el-button type="danger" icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete">删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <!--同步缓存按钮-->
+        <el-button type="warning" icon="el-icon-refresh" size="mini" @click="handleCacheAsync">同步最新数据到缓存</el-button>
+      </el-col>
+    </el-row>
+    <!--操作栏按钮结束-->
+    <!--数据列表开始-->
+    <!--el-table:数据列表
+      v-loading:v-loading在接口未请求到数据之前，显示加载中，直到请求到数据后消失
+      border:表示有边框
+      data:数据列表中显示的数据从哪获取
+      @selection-change:当选择项发生变化时会触发该事件
+    -->
+    <el-table v-loading="loading" border :data="dictTypeTableList" @selection-change="handleSelectionChnage">
+      <!--el-table-column:每一行中的每一列
+        prop:对应从:data中取出的数据
+        align:对齐方式
+        label:列名
+        show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示tooltip
+      -->
+      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column label="字典编号" prop="dictId" align="center" />
+      <el-table-column label="字典名称" prop="dictName" align="center" :show-overflow-tooltip="true" />
+      <el-table-column label="字典类型" prop="dictType" align="center" :show-overflow-tooltip="true">
+        <!--字典类型  slot-scope="scope" 来取得作用域插槽:data绑定的数据-->
+<!--        <template slot-scope="scope">-->
+<!--          &lt;!&ndash;动态绑定字典类型点击时所触发的操作,跳转路由,并携带该条数据的编号&ndash;&gt;-->
+<!--          <router-link :to="'/dict/data/' + scope.row.dictId" class="link-type">-->
+<!--            <span>{{ scope.row.dictType }}</span>-->
+<!--          </router-link>-->
+<!--        </template>-->
+      </el-table-column>
+      <!--formatter:用于按照指定要求来格式化此处需要显示的值,显示在列表中的数据是经过statusFormatter处理后的内容-->
+      <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter" />
+      <el-table-column label="备注" prop="remark" align="center" :show-overflow-tooltip="true" />
+      <el-table-column label="创建时间" prop="createTime" align="center" width="180" />
+      <el-table-column label="操作" align="center">
+        <template slot-scope="scope">
+          <!--传递该条数据到具体处理方法中-->
+          <el-button type="text" icon="el-icon-edit" size="mini" @click="handleUpdate(scope.row)">修改</el-button>
+          <el-button type="text" icon="el-icon-delete" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!--数据列表结束-->
+    <!--底部分页开始-->
+    <!--pagination:分页控件
+      v-show:控制是否显示分页控件的条件,当数据列表中数据不为空才显示
+      current-page:当前显示第几页
+      page-sizes:可选的每页显示条数
+      page-size:默认每页显示条数
+      layout:设置分页格式:总数,每页条数,前一页,当前页,下一页,跳转至某一页
+      total:总数
+      @size-change:改变每页显示条数后触发方法
+      @current-change:当前页发生改变的时候触发的方法
+    -->
+    <el-pagination
+      v-show="total>0"
+      :current-page="queryParams.pageNum"
+      :page-sizes="[5, 10, 20, 30]"
+      :page-size="queryParams.pageSize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+    />
+    <!--底部分页结束-->
+    <!--新增和修改模态框开始-->
+    <!--dialog:对话框
+      title:模态框标题
+      visible.sync:表示是否显示
+      center:居中
+      append-to-body:如果需要在一个对话框内部嵌套另一个对话框，需要使用append-to-body属性
+    -->
+    <el-dialog
+      :title="title"
+      :visible.sync="open"
+      width="500px"
+      center
+      append-to-body
+    >
+      <!--添加和修改的表单
+        rules:做表单数据前端校验
+        label-width:标签宽度(文字)
+      -->
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="字典名称" prop="dictName">
+          <el-input v-model="form.dictName" placeholder="请输入字典名称" clearable size="small" />
+        </el-form-item>
+        <el-form-item label="字典类型" prop="dictType">
+          <el-input v-model="form.dictType" placeholder="请输入字典类型" clearable size="small" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <!--单选框-->
+          <el-radio-group v-model="form.status">
+            <el-radio
+              v-for="dict in statusOptions"
+              :key="dict.dictValue"
+              :label="dict.dictValue"
+              :value="dict.dictValue"
+            >{{ dict.dictLabel }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="form.remark" type="textarea" placeholder="请输入字典备注" clearable size="small" />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleSubmit">保 存</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </span>
+    </el-dialog>
+    <!--新增和修改模态框结束-->
+  </div>
+</template>
+
+<script>
+// 引入字典类型相关api
+import { listForPage, addDictType, updateDictType, getDictTypeById, deleteDictTypeByIds, dictCacheAsync } from '@/api/system/dict/type'
+export default {
+  name: 'Type',
+  data() {
+    return {
+      // 是否启用遮罩层,请求后台时出现进度条(如果请求响应很快的话,可能看不到)
+      loading: false,
+      // 选中的字典类型的id集合
+      ids: [],
+      // 判断是否选中了单条记录,进而控制一些页面行为,比如选中了单个可以进行修改操作
+      single: true,
+      // 判断是否选中了多条记录,进行控制一些页面行为,比如选中了多个可以进行批量删除操作
+      multiple: true,
+      // 分页数据总条数
+      total: 0,
+      // 数据列表中数据(字典类型)
+      dictTypeTableList: [],
+      // 模态框的标题
+      title: '',
+      // 是否显示模态框
+      open: false,
+      // 查询条件中状态的码表(正常,停用)
+      statusOptions: [],
+      // 查询条件中选择的日期范围数据
+      dateRange: [],
+      // 查询参数
+      queryParams: {
+        pageNum: 1, // 默认第一页
+        pageSize: 10, // 每页默认10条
+        dictName: undefined, // 不筛选字典名称
+        dictType: undefined, // 不筛选字典类型
+        status: undefined // 字典类型的状态
+      },
+      // 表单数据(添加和修改的模态框中的数据)
+      form: {},
+      // 表单校验(前端校验,失去焦点就会触发)
+      // 给对应属性添加必填校验之后,会在label处显示*号
+      rules: {
+        // 字典名称
+        dictName: [
+          { required: true, message: '字典名称不能为空', trigger: 'blur' }
+        ],
+        // 字典类型
+        dictType: [
+          { required: true, message: '字典类型不能为空', trigger: 'blur' }
+        ]
+      }
+    }
+  },
+  // 生命周期,钩子函数  在实例创建完成后被立即调用
+  created() {
+
+  },
+  methods: {
+    // 查询操作
+    handleQuery() {
+      console.log(this.queryParams)
+      // 执行实际的查询方法
+      // this.getDictTypeList()
+    },
+    // 清空查询条件操作
+    resetQuery() {
+      console.log(this.queryParams)
+      // 清空查询数据
+      // this.resetForm('queryForm')
+      // 清空查询条件中选择的日期数据
+      // this.dateRange = []
+      // 重新查询数据列表,相当于执行一次无查询条件的查询操作,如果不调用这个方法,那么清空操作后,数据列表不会同步改变
+      // this.getDictTypeList()
+    },
+    // 添加操作,打开添加模态框
+    handleAdd() {
+      // 打开模态框
+      this.open = true
+    },
+    // 修改操作,打开修改模态框
+    handleUpdate(row) {
+    },
+    // 删除操作(含批量)
+    handleDelete(row) {
+    },
+    // 缓存同步
+    handleCacheAsync() {
+    },
+    // 改变数据列表第一列多选框选中状态所触发的方法,selection为选择的内容
+    handleSelectionChnage(selection) {
+    },
+    // 转换字典数据(code值与实际显示值)
+    statusFormatter(row) {
+      return row.status
+    },
+    // 改变每页显示条数的时候触发
+    handleSizeChange(val) {
+    },
+    // 当前页改变时触发(前一页,点击某一页,下一页,跳转某一页)
+    handleCurrentChange(val) {
+    },
+    // 模态框  保存按钮
+    handleSubmit() {
+    },
+    // 模态框  取消按钮
+    cancel() {
+      // 设置open为false,表示关闭模态框
+      this.open = false
+    }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>

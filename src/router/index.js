@@ -105,7 +105,7 @@ export const asyncRoutes = [
       },
       {
         path: 'dict',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/system/dict/type'),
         name: '/system/dict',
         meta: {
           title: '字典管理',
