@@ -31,7 +31,7 @@ export function addDateRange(params, dateRange) {
   return search
 }
 /**
- * 码表转换
+ * 码表转换(每一行都会调用一次)
  * @param datas 对应字典类型的全部数据
  * @param value 待转换的码值
  * @returns {string}
@@ -44,5 +44,7 @@ export function transferDictCode(datas, value) {
       return false
     }
   })
+  // actions  =>   ["正常"]  或者  ["停用"]
+  // actions.join('')   =>  化数组为字符串了
   return actions.join('')
 }

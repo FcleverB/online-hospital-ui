@@ -69,7 +69,7 @@
           style="width:280px"
           value-format="yyyy-MM-dd"
           type="daterange"
-          range-separator="至"
+          range-separator="-"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
         />
@@ -126,12 +126,12 @@
       <el-table-column label="字典名称" prop="dictName" align="center" :show-overflow-tooltip="true" />
       <el-table-column label="字典类型" prop="dictType" align="center" :show-overflow-tooltip="true">
         <!--字典类型  slot-scope="scope" 来取得作用域插槽:data绑定的数据-->
-<!--        <template slot-scope="scope">-->
-<!--          &lt;!&ndash;动态绑定字典类型点击时所触发的操作,跳转路由,并携带该条数据的编号&ndash;&gt;-->
-<!--          <router-link :to="'/dict/data/' + scope.row.dictId" class="link-type">-->
-<!--            <span>{{ scope.row.dictType }}</span>-->
-<!--          </router-link>-->
-<!--        </template>-->
+        <!--        <template slot-scope="scope">-->
+        <!--          &lt;!&ndash;动态绑定字典类型点击时所触发的操作,跳转路由,并携带该条数据的编号&ndash;&gt;-->
+        <!--          <router-link :to="'/dict/data/' + scope.row.dictId" class="link-type">-->
+        <!--            <span>{{ scope.row.dictType }}</span>-->
+        <!--          </router-link>-->
+        <!--        </template>-->
       </el-table-column>
       <!--formatter:用于按照指定要求来格式化此处需要显示的值,显示在列表中的数据是经过statusFormatter处理后的内容-->
       <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter" />
@@ -225,6 +225,7 @@ export default {
   data() {
     return {
       // 是否启用遮罩层,请求后台时出现进度条(如果请求响应很快的话,可能看不到)
+      // 体现在页面上就是一个页面中心一个转圈的显示
       loading: false,
       // 选中的字典类型的id集合
       ids: [],
@@ -270,24 +271,30 @@ export default {
   },
   // 生命周期,钩子函数  在实例创建完成后被立即调用
   created() {
-
+    // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
+    this.getDictTypeList()
+    // 使用全局的根据字典类型查询字典数据的方法来获取查询条件中的状态信息
+    this.getDataByType('sys_normal_disable').then(res => {
+      // 将查询到的状态信息保存到当前页面对应的属性中
+      this.statusOptions = res.data
+    })
   },
   methods: {
     // 查询操作
     handleQuery() {
       console.log(this.queryParams)
       // 执行实际的查询方法
-      // this.getDictTypeList()
+      // 因为输入的查询条件实时与queryParams动态绑定
+      this.getDictTypeList()
     },
     // 清空查询条件操作
     resetQuery() {
-      console.log(this.queryParams)
       // 清空查询数据
-      // this.resetForm('queryForm')
+      this.resetForm('queryForm')
       // 清空查询条件中选择的日期数据
-      // this.dateRange = []
+      this.dateRange = []
       // 重新查询数据列表,相当于执行一次无查询条件的查询操作,如果不调用这个方法,那么清空操作后,数据列表不会同步改变
-      // this.getDictTypeList()
+      this.getDictTypeList()
     },
     // 添加操作,打开添加模态框
     handleAdd() {
@@ -308,13 +315,21 @@ export default {
     },
     // 转换字典数据(code值与实际显示值)
     statusFormatter(row) {
-      return row.status
+      return this.transferDictCode(this.statusOptions, row.status)
     },
     // 改变每页显示条数的时候触发
     handleSizeChange(val) {
+      // 更新每页显示条数
+      this.queryParams.pageSize = val
+      // 重新查询
+      this.getDictTypeList()
     },
     // 当前页改变时触发(前一页,点击某一页,下一页,跳转某一页)
     handleCurrentChange(val) {
+      // 更新需要显示的第几页数
+      this.queryParams.pageNum = val
+      // 重新查询
+      this.getDictTypeList()
     },
     // 模态框  保存按钮
     handleSubmit() {

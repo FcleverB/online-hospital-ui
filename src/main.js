@@ -19,7 +19,7 @@ import { getDataByType } from '@/api/system/dict/data' // 根据字典类型获�
 // 全局方法挂载(这里挂载了自定义的全局通用方法)
 Vue.prototype.resetForm = resetForm
 Vue.prototype.addDateRange = addDateRange
-Vue.prototype.selectDictLabel = transferDictCode
+Vue.prototype.transferDictCode = transferDictCode
 Vue.prototype.getDataByType = getDataByType // 加载全局的根据字典类型查询字典的方法[基本每个页面都要使用]
 // 挂载全局消息框
 // 成功消息
