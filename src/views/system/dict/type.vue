@@ -408,28 +408,54 @@ export default {
       this.loading = true
       if (this.form.dictId === undefined) {
         // 添加操作
-        // 调用保存字典类型的api，调用引入的api不可以使用this.xxx,因为不是当前页面的方法
-        addDictType(this.form).then(res => {
-          // 显示保存成功的消息,调用全局消息
-          this.msgSuccess('保存成功')
-          // 关闭遮罩
-          this.loading = false
-          // 列表数据重新查询
-          this.getDictTypeList()
-          // 关闭模态框
-          this.open = false
+        // 表单前端校验，如果不通过就不会执行后端方法
+        this.$refs['form'].validate((valid) => {
+          if (valid) { // 通过校验
+            // 调用保存字典类型的api，调用引入的api不可以使用this.xxx,因为不是当前页面的方法
+            addDictType(this.form).then(res => {
+              // 显示保存成功的消息,调用全局消息
+              this.msgSuccess('保存成功')
+              // 关闭遮罩
+              this.loading = false
+              // 列表数据重新查询
+              this.getDictTypeList()
+              // 关闭模态框
+              this.open = false
+            }).catch(() => {
+              // 出现异常的处理方式
+              // 已经通过响应拦截器处理了该类型的异常，并显示了提示信息
+              // 关闭遮罩
+              this.loading = false
+            })
+          } else {
+            this.msgError('数据校验不通过')
+            this.loading = false
+          }
         })
       } else {
         // 修改操作
-        updateDictType(this.form).then(res => {
-          // 显示修改成功的消息,调用全局消息
-          this.msgSuccess('修改成功')
-          // 关闭遮罩
-          this.loading = false
-          // 列表数据重新查询
-          this.getDictTypeList()
-          // 关闭模态框
-          this.open = false
+        // 表单前端校验，如果不通过就不会执行后端方法
+        this.$refs['form'].validate((valid) => {
+          if (valid) {
+            updateDictType(this.form).then(res => {
+              // 显示修改成功的消息,调用全局消息
+              this.msgSuccess('修改成功')
+              // 关闭遮罩
+              this.loading = false
+              // 列表数据重新查询
+              this.getDictTypeList()
+              // 关闭模态框
+              this.open = false
+            }).catch(() => {
+              // 出现异常的处理方式
+              // 已经通过响应拦截器处理了该类型的异常，并显示了提示信息
+              // 关闭遮罩
+              this.loading = false
+            })
+          } else {
+            this.msgError('数据校验不通过')
+            this.loading = false
+          }
         })
       }
     },
