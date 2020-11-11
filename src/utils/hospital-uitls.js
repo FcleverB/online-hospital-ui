@@ -6,6 +6,10 @@
  */
 export function resetForm(refName) {
   if (this.$refs[refName]) {
+    /**
+     * elementUI的重置表单的方法-对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
+     *    表单中每个属性需要添加prop属性,并且要和绑定数据的名称一致
+      */
     this.$refs[refName].resetFields()
   }
 }

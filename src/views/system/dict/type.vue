@@ -95,11 +95,11 @@
       </el-col>
       <el-col :span="1.5">
         <!--修改按钮:只有在选中一条记录的时候,才会处于可用状态-->
-        <el-button type="success" icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate">修改</el-button>
+        <el-button type="success" icon="el-icon-edit" size="mini" :disabled="!single" @click="handleUpdate">修改</el-button>
       </el-col>
       <el-col :span="1.5">
         <!--删除按钮,只要有选中数据就可用,不管一条还是多条-->
-        <el-button type="danger" icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete">删除</el-button>
+        <el-button type="danger" icon="el-icon-delete" size="mini" :disabled="!multiple" @click="handleDelete">批量删除</el-button>
       </el-col>
       <el-col :span="1.5">
         <!--同步缓存按钮-->
@@ -138,6 +138,7 @@
       <el-table-column label="备注" prop="remark" align="center" :show-overflow-tooltip="true" />
       <el-table-column label="创建时间" prop="createTime" align="center" width="180" />
       <el-table-column label="操作" align="center">
+        <!--slot-scope="scope" 取到当前单元格-->
         <template slot-scope="scope">
           <!--传递该条数据到具体处理方法中-->
           <el-button type="text" icon="el-icon-edit" size="mini" @click="handleUpdate(scope.row)">修改</el-button>
@@ -230,9 +231,9 @@ export default {
       // 选中的字典类型的id集合
       ids: [],
       // 判断是否选中了单条记录,进而控制一些页面行为,比如选中了单个可以进行修改操作
-      single: true,
+      single: false,
       // 判断是否选中了多条记录,进行控制一些页面行为,比如选中了多个可以进行批量删除操作
-      multiple: true,
+      multiple: false,
       // 分页数据总条数
       total: 0,
       // 数据列表中数据(字典类型)
@@ -300,18 +301,81 @@ export default {
     handleAdd() {
       // 打开模态框
       this.open = true
+      // 重置表单
+      this.reset()
     },
     // 修改操作,打开修改模态框
     handleUpdate(row) {
+      // 如果是点击数据列表上方的修改按钮时，是不会传递row数据的
+      // 如果是点击每行记录后面的修改链接时可以拿到row数据
+      // 如果row.dictId为undefined，那么就表示点击的是修改按钮，因此要ids的第一个数据就是选中的要修改的数据
+      // 然后将该dictId作为查询条件向后台发送请求即可
+      // const dictId = row.dictId === undefined ? this.ids[0] : row.dictId
+      // 下面这种方式，如果是点击修改按钮得到的数据，那么dictId是一个仅有一个值的数组，传递到后台也可以匹配参数
+      const dictId = row.dictId || this.ids
+      // 打开模态框
+      this.open = true
+      // 重置表单
+      this.reset()
+      // 根据id查询对应字典类型，并填充到form中
+      // 这里通过id查询到的数据是一整条数据，填充到了form中，并不影响
+      // getDictTypeById(row.dictId).then(res => {
+      getDictTypeById(dictId).then(res => {
+        this.form = res.data
+      })
+      // 优化点，row已经是一整条数据了，为啥还要走后台查询呢？
+      // this.form = row
     },
     // 删除操作(含批量)
     handleDelete(row) {
+      // 根据row.dictId是否为undefined来判断是批量删除还是单个删除
+      // const dictId = row.dictId === undefined ? this.ids : row.dictId
+      // const dictId = row.dictId === undefined ? this.ids[0] : row.dictId
+      // 下面这种方式，如果是点击删除按钮得到的数据，那么dictId是一个含有多个值的数组，传递到后台也可以匹配参数
+      const dictId = row.dictId || this.ids
+      // 确认框显示
+      this.$confirm('此操作将永久删除该字典类型, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 开启遮罩
+        this.loading = true
+        // 调用api执行删除操作
+        deleteDictTypeByIds(dictId).then(res => {
+          // 关闭遮罩
+          this.loading = false
+          // 操作成功提示
+          this.msgSuccess('删除成功')
+          // 重新查询数据列表
+          this.getDictTypeList()
+        })
+      }).catch(() => {
+        // 关闭遮罩
+        this.loading = false
+        // 操作失败提示
+        this.msgInfo('取消删除操作')
+      })
+      // 执行删除
     },
     // 缓存同步
     handleCacheAsync() {
+      // 开启遮罩
+      this.loading = true
+      dictCacheAsync().then(res => {
+        // 关闭遮罩
+        this.loading = false
+        // 显示提示信息
+        this.msgSuccess('缓存同步成功')
+      })
     },
     // 改变数据列表第一列多选框选中状态所触发的方法,selection为选择的内容
     handleSelectionChnage(selection) {
+      // selection保存着勾选的一条数据，以数组形式存储，对象为一个单位
+      this.single = selection.length === 1
+      this.multiple = selection.length > 1
+      // 保存勾选的数据的id  item表示取出数组中一个数据，然后获取到该条数据的id，遍历完成后，ids拿到所有勾选的id
+      this.ids = selection.map(item => item.dictId)
     },
     // 转换字典数据(code值与实际显示值)
     statusFormatter(row) {
@@ -332,12 +396,60 @@ export default {
       this.getDictTypeList()
     },
     // 模态框  保存按钮
+    /**
+     * 因为新增和修改操作都是打开同一个模态框
+     * 因此点击保存按钮时，需要区分执行的是新增操作还是修改操作
+     *    个人想法：根据this.form.dictId来区分
+     *              如果this.form.dictId不存在那么就是新增，因为dictId会在后台生成
+     *               否则为修改操作
+     */
     handleSubmit() {
+      // 打开遮罩
+      this.loading = true
+      if (this.form.dictId === undefined) {
+        // 添加操作
+        // 调用保存字典类型的api，调用引入的api不可以使用this.xxx,因为不是当前页面的方法
+        addDictType(this.form).then(res => {
+          // 显示保存成功的消息,调用全局消息
+          this.msgSuccess('保存成功')
+          // 关闭遮罩
+          this.loading = false
+          // 列表数据重新查询
+          this.getDictTypeList()
+          // 关闭模态框
+          this.open = false
+        })
+      } else {
+        // 修改操作
+        updateDictType(this.form).then(res => {
+          // 显示修改成功的消息,调用全局消息
+          this.msgSuccess('修改成功')
+          // 关闭遮罩
+          this.loading = false
+          // 列表数据重新查询
+          this.getDictTypeList()
+          // 关闭模态框
+          this.open = false
+        })
+      }
     },
     // 模态框  取消按钮
     cancel() {
       // 设置open为false,表示关闭模态框
       this.open = false
+    },
+    // 重置表单
+    reset() {
+      // 设置初始值
+      this.form = {
+        dictId: undefined,
+        dictName: undefined,
+        dictType: undefined,
+        status: '0', // 默认选中正常状态
+        remark: undefined
+      }
+      // 重置表单,对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
+      this.resetForm('form')
     }
   }
 }
