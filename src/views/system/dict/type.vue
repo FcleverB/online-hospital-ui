@@ -126,12 +126,12 @@
       <el-table-column label="字典名称" prop="dictName" align="center" :show-overflow-tooltip="true" />
       <el-table-column label="字典类型" prop="dictType" align="center" :show-overflow-tooltip="true">
         <!--字典类型  slot-scope="scope" 来取得作用域插槽:data绑定的数据-->
-        <!--        <template slot-scope="scope">-->
-        <!--          &lt;!&ndash;动态绑定字典类型点击时所触发的操作,跳转路由,并携带该条数据的编号&ndash;&gt;-->
-        <!--          <router-link :to="'/dict/data/' + scope.row.dictId" class="link-type">-->
-        <!--            <span>{{ scope.row.dictType }}</span>-->
-        <!--          </router-link>-->
-        <!--        </template>-->
+        <template slot-scope="scope">
+          <!--动态绑定字典类型点击时所触发的操作,跳转路由到data,并携带该条数据的编号-->
+          <router-link :to="'/dict/data/' + scope.row.dictId" class="link-type">
+            <span>{{ scope.row.dictType }}</span>
+          </router-link>
+        </template>
       </el-table-column>
       <!--formatter:用于按照指定要求来格式化此处需要显示的值,显示在列表中的数据是经过statusFormatter处理后的内容-->
       <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter" />
@@ -312,6 +312,7 @@ export default {
       // 然后将该dictId作为查询条件向后台发送请求即可
       // const dictId = row.dictId === undefined ? this.ids[0] : row.dictId
       // 下面这种方式，如果是点击修改按钮得到的数据，那么dictId是一个仅有一个值的数组，传递到后台也可以匹配参数
+      // js利用|| 或者 && 简便赋值方式
       const dictId = row.dictId || this.ids
       // 打开模态框
       this.open = true
@@ -332,6 +333,7 @@ export default {
       // const dictId = row.dictId === undefined ? this.ids : row.dictId
       // const dictId = row.dictId === undefined ? this.ids[0] : row.dictId
       // 下面这种方式，如果是点击删除按钮得到的数据，那么dictId是一个含有多个值的数组，传递到后台也可以匹配参数
+      // js利用|| 或者 && 简便赋值方式
       const dictId = row.dictId || this.ids
       // 确认框显示
       this.$confirm('此操作将永久删除该字典类型, 是否继续?', '提示', {

@@ -370,7 +370,7 @@ export const asyncRoutes = [
     ]
   }
 ]
-// 常量路由
+// 最终路由,这个页面不是在左侧菜单栏中
 export const lastRoute = [
   {
     path: '/dict',
@@ -378,8 +378,8 @@ export const lastRoute = [
     hidden: true,
     children: [
       {
-        path: 'type/data/:dictId(\\d+)',
-        component: () => import('@/views/error-page/404'),
+        path: 'data/:dictId(\\d+)', // 括号里面是正则匹配，只能接受数字
+        component: () => import('@/views/system/dict/data'),
         name: '/dict',
         meta: { title: '数据字典' }
       }

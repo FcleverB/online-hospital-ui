@@ -32,7 +32,7 @@ export function deleteDictDataByIds(dictCodeIds) {
   })
 }
 // 根据字典数据ID查询字典数据
-export function getOne(dictCode) {
+export function getDictDataById(dictCode) {
   return request({
     url: '/system/dict/data/getOne/' + dictCode,
     method: 'get'
