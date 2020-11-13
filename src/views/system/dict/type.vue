@@ -119,7 +119,7 @@
         prop:对应从:data中取出的数据
         align:对齐方式
         label:列名
-        show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示tooltip
+        show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
       -->
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="字典编号" prop="dictId" align="center" />
@@ -281,9 +281,24 @@ export default {
     })
   },
   methods: {
+    // 查询数据列表数据
+    getDictTypeList() {
+      // 打开遮罩
+      this.loading = true
+      // 调用分页查询的api方法
+      // listForPage(this.queryParams).then(res => {
+      // 通过addDateRange封装起始时间和结束时间
+      listForPage(this.addDateRange(this.queryParams, this.dateRange)).then(res => {
+        // 将分页数据传递给数据类表绑定的data数据
+        this.dictTypeTableList = res.data
+        // 查询到数据了,就要显示分页了
+        this.total = res.total
+        // 关闭遮罩
+        this.loading = false
+      })
+    },
     // 查询操作
     handleQuery() {
-      console.log(this.queryParams)
       // 执行实际的查询方法
       // 因为输入的查询条件实时与queryParams动态绑定
       this.getDictTypeList()
