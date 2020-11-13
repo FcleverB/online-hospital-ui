@@ -358,7 +358,6 @@ export default {
         // 操作失败提示
         this.msgInfo('取消删除操作')
       })
-      // 执行删除
     },
     // 缓存同步
     handleCacheAsync() {
