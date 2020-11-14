@@ -152,6 +152,10 @@
           <el-input v-model="form.dictValue" placeholder="请输入数据键值" clearable size="small" />
         </el-form-item>
         <el-form-item label="排序显示" prop="dictSort">
+          <!--el-input-number
+              计数器 这里设置了最小为0，低于0之后无法减少
+              步进为1
+          -->
           <el-input-number v-model="form.dictSort" placeholder="请输入数据键值" clearable size="small" :min="0" />
         </el-form-item>
         <el-form-item label="状态" prop="status">
@@ -179,7 +183,13 @@
 
 <script>
 import { listForPage, addDictData, updateDictData, deleteDictDataByIds, getDictDataById } from '@/api/system/dict/data'
-import { deleteDictTypeByIds, getDictTypeById, selectAllDictType } from '@/api/system/dict/type'
+import {
+  addDictType,
+  deleteDictTypeByIds,
+  getDictTypeById,
+  selectAllDictType,
+  updateDictType
+} from '@/api/system/dict/type'
 export default {
   name: 'Data',
   data() {
@@ -205,8 +215,7 @@ export default {
       // 所有字典类型数据
       dictTypeOptions: [],
       // 默认查询的类型,点击某个字典类型进入到类型详情页面中，会在查询条件中默认选中该字典类型
-      // 对查询参数中对应字典类型进行绑定即可，created方法中，不用单独设置变量了
-      // defaultDictType: undefined,
+      defaultDictType: undefined,
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -244,7 +253,7 @@ export default {
     // 根据字典类型id获取对应的字典类型,为了在查询条件中的字典类型中进行默认选中
     getDictTypeById(dictId).then(res => {
       // 保存查询到的字典类型
-      // this.defaultDictType = res.data.dictType
+      this.defaultDictType = res.data.dictType
       // 下拉框中默认选中
       this.queryParams.dictType = res.data.dictType
     })
@@ -281,6 +290,8 @@ export default {
     resetQuery() {
       // 清空查询数据
       this.resetForm('queryForm')
+      // 设置查询条件中的默认选中字典类型依旧是点击进入时的类型
+      this.queryParams.dictType = this.defaultDictType
       // 重新查询数据列表,相当于执行一次无查询条件的查询操作,如果不调用这个方法,那么清空操作后,数据列表不会同步改变
       this.getDictDataList()
     },
@@ -290,25 +301,28 @@ export default {
       this.open = true
       // 重置表单   重新初始化值并清空校验提示
       this.reset()
+      // 上下两步顺序不能反，先重置后赋值
+      // 设置字典类型默认选中的值
+      this.form.dictType = this.defaultDictType
     },
     // 修改操作,打开修改模态框
     handleUpdate(row) {
       // 如果是点击数据列表上方的修改按钮时，是不会传递row数据的
       // 如果是点击每行记录后面的修改链接时可以拿到row数据
-      // 如果row.dictId为undefined，那么就表示点击的是修改按钮，因此要ids的第一个数据就是选中的要修改的数据
+      // 如果row.dictCode为undefined，那么就表示点击的是修改按钮，因此要ids的第一个数据就是选中的要修改的数据
       // 然后将该dictId作为查询条件向后台发送请求即可
-      // const dictId = row.dictId === undefined ? this.ids[0] : row.dictId
+      // const dictCode = row.dictCode === undefined ? this.ids[0] : row.dictCode
       // 下面这种方式，如果是点击修改按钮得到的数据，那么dictId是一个仅有一个值的数组，传递到后台也可以匹配参数
       // js利用|| 或者 && 简便赋值方式
-      const dictId = row.dictId || this.ids
+      const dictCode = row.dictCode || this.ids
       // 打开模态框
       this.open = true
       // 重置表单
       this.reset()
       // 根据id查询对应字典类型，并填充到form中
       // 这里通过id查询到的数据是一整条数据，填充到了form中，并不影响
-      // getDictTypeById(row.dictId).then(res => {
-      getDictTypeById(dictId).then(res => {
+      // getDictDataById(row.dictId).then(res => {
+      getDictDataById(dictCode).then(res => {
         this.form = res.data
       })
       // 优化点，row已经是一整条数据了，为啥还要走后台查询呢？
@@ -321,9 +335,9 @@ export default {
       // const dictId = row.dictId === undefined ? this.ids[0] : row.dictId
       // 下面这种方式，如果是点击删除按钮得到的数据，那么dictId是一个含有多个值的数组，传递到后台也可以匹配参数
       // js利用|| 或者 && 简便赋值方式
-      const dictId = row.dictId || this.ids
+      const dictCode = row.dictCode || this.ids
       // 确认框显示
-      this.$confirm('此操作将永久删除该字典类型, 是否继续?', '提示', {
+      this.$confirm('此操作将永久删除该字典数据, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -331,7 +345,7 @@ export default {
         // 开启遮罩
         this.loading = true
         // 调用api执行删除操作
-        deleteDictTypeByIds(dictId).then(res => {
+        deleteDictDataByIds(dictCode).then(res => {
           // 关闭遮罩
           this.loading = false
           // 操作成功提示
@@ -350,11 +364,13 @@ export default {
     reset() {
       // 设置初始值
       this.form = {
-        dictId: undefined,
-        dictName: undefined,
-        dictType: undefined,
-        status: '0', // 默认选中正常状态
-        remark: undefined
+        dictCode: undefined, // 字典数据主键
+        dictLable: undefined, // 字典数据标签，中文值
+        dictValue: undefined, // 字典数据键值  数字
+        dictType: undefined, // 字典数据对应的类型
+        status: '0', // 默认状态 正常
+        dictSort: 0, // 默认排序号  0
+        remark: undefined // 备注
       }
       // 重置表单,对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
       this.resetForm('form')
@@ -365,7 +381,7 @@ export default {
       this.single = selection.length === 1
       this.multiple = selection.length > 1
       // 保存勾选的数据的id  item表示取出数组中一个数据，然后获取到该条数据的id，遍历完成后，ids拿到所有勾选的id
-      this.ids = selection.map(item => item.dictId)
+      this.ids = selection.map(item => item.dictCode)
     },
     // 改变每页显示条数的时候触发
     handleSizeChange(val) {
@@ -385,6 +401,75 @@ export default {
     statusFormatter(row) {
       return this.transferDictCode(this.statusOptions, row.status)
     },
+    // 模态框  保存按钮
+    /**
+     * 因为新增和修改操作都是打开同一个模态框
+     * 因此点击保存按钮时，需要区分执行的是新增操作还是修改操作
+     *    个人想法：根据this.form.dictId来区分
+     *              如果this.form.dictId不存在那么就是新增，因为dictId会在后台生成
+     *               否则为修改操作
+     */
+    handleSubmit() {
+      // 打开遮罩
+      this.loading = true
+      if (this.form.dictCode === undefined) {
+        // 添加操作
+        // 表单前端校验，如果不通过就不会执行后端方法
+        this.$refs['form'].validate((valid) => {
+          if (valid) { // 通过校验
+            // 调用保存字典类型的api，调用引入的api不可以使用this.xxx,因为不是当前页面的方法
+            addDictData(this.form).then(res => {
+              // 显示保存成功的消息,调用全局消息
+              this.msgSuccess('保存成功')
+              // 关闭遮罩
+              this.loading = false
+              // 列表数据重新查询
+              this.getDictDataList()
+              // 关闭模态框
+              this.open = false
+            }).catch(() => {
+              // 出现异常的处理方式
+              // 已经通过响应拦截器处理了该类型的异常，并显示了提示信息
+              // 关闭遮罩
+              this.loading = false
+            })
+          } else {
+            this.msgError('数据校验不通过')
+            this.loading = false
+          }
+        })
+      } else {
+        // 修改操作
+        // 表单前端校验，如果不通过就不会执行后端方法
+        this.$refs['form'].validate((valid) => {
+          if (valid) {
+            updateDictData(this.form).then(res => {
+              // 显示修改成功的消息,调用全局消息
+              this.msgSuccess('修改成功')
+              // 关闭遮罩
+              this.loading = false
+              // 列表数据重新查询
+              this.getDictDataList()
+              // 关闭模态框
+              this.open = false
+            }).catch(() => {
+              // 出现异常的处理方式
+              // 已经通过响应拦截器处理了该类型的异常，并显示了提示信息
+              // 关闭遮罩
+              this.loading = false
+            })
+          } else {
+            this.msgError('数据校验不通过')
+            this.loading = false
+          }
+        })
+      }
+    },
+    // 模态框  取消按钮
+    cancel() {
+      // 设置open为false,表示关闭模态框
+      this.open = false
+    }
   }
 }
 </script>
