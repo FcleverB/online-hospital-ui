@@ -83,6 +83,41 @@
     <!-- 数据列表开始 -->
     <el-table v-loading="loading" border :data="operationLogTableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
+      <!--当行内容过多并且不想显示横向滚动条时，可以使用 Table 展开行功能-->
+      <!--通过设置 type="expand" 和 Scoped slot 可以开启展开行功能-->
+      <el-table-column type="expand">
+        <template slot-scope="props">
+          <el-form label-position="left" inline class="demo-table-expand">
+            <el-form-item label="操作模块">
+              <span>{{ props.row.title }}</span>
+            </el-form-item>
+            <el-form-item label="登陆信息">
+              <span>{{ props.row.operName }} // {{ props.row.operIp }} // {{ props.row.operLocation }}</span>
+            </el-form-item>
+            <el-form-item label="请求地址">
+              <span>{{ props.row.operUrl }}</span>
+            </el-form-item>
+            <el-form-item label="操作方法">
+              <span>{{ props.row.requestMethod }}</span>
+            </el-form-item>
+            <el-form-item label="请求参数">
+              <span>{{ props.row.operParam }}</span>
+            </el-form-item>
+            <el-form-item label="返回参数">
+              <span>{{ props.row.jsonResult }}</span>
+            </el-form-item>
+            <el-form-item label="操作状态">
+              <span>{{ props.row.status==0?'成功':'失败' }}</span>
+            </el-form-item>
+            <el-form-item label="操作时间">
+              <span>{{ props.row.operTime }}</span>
+            </el-form-item>
+            <el-form-item label="异常信息">
+              <span>{{ props.row.errorMsg }}</span>
+            </el-form-item>
+          </el-form>
+        </template>
+      </el-table-column>
       <el-table-column label="日志ID" align="center" prop="operId" />
       <el-table-column label="模块名称" align="center" prop="title" />
       <el-table-column label="操作类型" align="center" prop="businessType" :formatter="businessTypeFormatter" />
