@@ -52,3 +52,30 @@ export function transferDictCode(datas, value) {
   // actions.join('')   =>  化数组为字符串了
   return actions.join('')
 }
+
+/**
+ * 构造树的结构
+ * @param data  数据
+ * @param id  主键id
+ * @param parentId  父菜单id
+ * @param children  子节点
+ * @param rootId  根菜单id 默认为0
+ * @returns {*}
+ */
+export function handleTree(data, id, parentId, children, rootId) {
+  id = id || 'id'
+  parentId = parentId || 'parentId'
+  children = children || 'children'
+  rootId = rootId || 0
+  // 对原数据进行深度克隆
+  const cloneData = JSON.parse(JSON.stringify(data))
+  const treeData = cloneData.filter(father => {
+    const branchArr = cloneData.filter(child => {
+      return father[id] === child[parentId]
+    })
+    branchArr.length > 0 ? father.children = branchArr : ''
+    // 返回上一层
+    return father[parentId] === rootId
+  })
+  return treeData !== '' ? treeData : data
+}
