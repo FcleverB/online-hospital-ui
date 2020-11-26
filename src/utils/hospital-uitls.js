@@ -55,11 +55,14 @@ export function transferDictCode(datas, value) {
 
 /**
  * 构造树的结构
+ *    对数据的结构进行重构建
+ *    当 row 中包含 children 字段时，被视为树形数据
+ *    通过指定 row 中的 hasChildren 字段来指定哪些行是包含子节点。children 与 hasChildren 都可以通过 tree-props 配置。
  * @param data  数据
- * @param id  主键id
- * @param parentId  父菜单id
- * @param children  子节点
- * @param rootId  根菜单id 默认为0
+ * @param id  指定当前数据的id匹配哪个属性名，默认取id
+ * @param parentId  指定当前数据的父菜单id匹配的属性名，默认为parentId
+ * @param children  指定当前数据的子节点匹配的属性名，默认为children
+ * @param rootId  指定当前数据的根菜单id匹配的属性名 默认为0
  * @returns {*}
  */
 export function handleTree(data, id, parentId, children, rootId) {
@@ -69,11 +72,14 @@ export function handleTree(data, id, parentId, children, rootId) {
   rootId = rootId || 0
   // 对原数据进行深度克隆
   const cloneData = JSON.parse(JSON.stringify(data))
+  // 外层过滤每次获取一行数据
   const treeData = cloneData.filter(father => {
+    // 内层过滤之后，branchArr的内容就是father的所有child
     const branchArr = cloneData.filter(child => {
       return father[id] === child[parentId]
     })
-    branchArr.length > 0 ? father.children = branchArr : ''
+    // 判断过滤后的branchArr是否为空，如果不为空，那么该father的所有的子节点就是branchArr，否则没有子节点
+    branchArr.length > 0 ? father[children] = branchArr : ''
     // 返回上一层
     return father[parentId] === rootId
   })
