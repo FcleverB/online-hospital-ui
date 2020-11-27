@@ -133,26 +133,64 @@
         label-width:标签宽度(文字)
       -->
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="字典名称" prop="dictName">
-          <el-input v-model="form.dictName" placeholder="请输入字典名称" clearable size="small" />
-        </el-form-item>
-        <el-form-item label="字典类型" prop="dictType">
-          <el-input v-model="form.dictType" placeholder="请输入字典类型" clearable size="small" />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <!--单选框-->
-          <el-radio-group v-model="form.status">
-            <el-radio
-              v-for="dict in statusOptions"
-              :key="dict.dictValue"
-              :label="dict.dictValue"
-              :value="dict.dictValue"
-            >{{ dict.dictLabel }}</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入字典备注" clearable size="small" />
-        </el-form-item>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="上级菜单" prop="parentName">
+              <el-input v-model="form.parentId"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="菜单类型" prop="menuType">
+              <el-radio-group v-model="form.menuType">
+                <el-radio label="M">目录</el-radio>
+                <el-radio label="C">菜单</el-radio>
+                <el-radio label="F">权限</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="菜单名称" prop="menuName">
+              <el-input v-model="form.menuName" placeholder="请输入菜单名称" clearable size="small"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="路由地址" prop="path">
+              <el-input v-model="form.path" placeholder="请输入路由地址" clearable size="small"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="状态" prop="status">
+              <!--单选框-->
+              <el-radio-group v-model="form.status">
+                <el-radio
+                  v-for="menu in statusOptions"
+                  :key="menu.dictValue"
+                  :label="menu.dictValue"
+                  :value="menu.dictValue"
+                >{{ menu.dictLabel }}</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item v-if="form.menuType === 'F'" label="权限标识" prop="percode">
+              <el-input v-model="form.percode" placeholder="请输入权限标识" clearable size="small"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="备注" prop="remark">
+              <!--autosize  根据用户输入内容进行自适应   resize="none"  不允许用户调整大小-->
+              <el-input v-model="form.remark" type="textarea" placeholder="请输入备注" clearable size="small" autosize resize="none"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="handleSubmit">保 存</el-button>
@@ -166,7 +204,6 @@
 <script>
 // 引入菜单管理相关api
 import { updateMenu, listAllMenus, selectMenuTree, deleteMenuById, getMenuById, addMenu } from '@/api/system/menu/menu'
-import {handleTree} from "@/utils/hospital-uitls";
 export default {
   name: 'Menu',
   data() {
@@ -193,6 +230,7 @@ export default {
       // 给对应属性添加必填校验之后,会在label处显示*号
       rules: {
         // 字典名称
+        // 触发校验的方式 trigger: 'blur'  失去焦点时触发
         menuName: [
           { required: true, message: '菜单名称不能为空', trigger: 'blur' }
         ]
@@ -244,6 +282,9 @@ export default {
       this.open = true
       // 重置表单
       this.reset()
+      // 如果是从操作栏点击新增，默认选中目录按钮
+      // 如果是从数据行中点击新增，则默认选中下一级，比如在目录行点击新增，那么表示要添加的为菜单
+      // 那么如果是从权限行，就不应该有新增了
     },
     // 修改操作,打开修改模态框
     handleUpdate(row) {
@@ -371,6 +412,7 @@ export default {
         parentId: 0, // 父菜单id
         menuName: undefined, // 菜单名称
         percode: undefined, // 权限标识
+        path: undefined, // 路由地址
         menuType: 'M', // 菜单类型
         remark: undefined, // 备注
         status: '0' // 默认选中正常状态
