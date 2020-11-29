@@ -102,6 +102,7 @@
       <el-table-column label="权限标识" prop="percode" align="center" ></el-table-column>
       <!--formatter:用于按照指定要求来格式化此处需要显示的值,显示在列表中的数据是经过statusFormatter处理后的内容-->
       <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter" />
+      <el-table-column label="备注" prop="remark" align="center" width="180" />
       <el-table-column label="创建时间" prop="createTime" align="center" width="180" />
       <el-table-column label="操作" align="center">
         <!--slot-scope="scope" 取到当前单元格-->
@@ -135,15 +136,25 @@
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
           <el-col :span="24">
-            <el-form-item label="上级菜单" prop="parentName">
-              <el-input v-model="form.parentId"></el-input>
+            <el-form-item label="上级菜单" prop="parentId">
+              <!--options:构造的树形数据
+                :show-count   是否显示每个层级下的数量
+              -->
+              <treeselect
+                v-model="form.parentId"
+                :options="menuTreeOptions"
+                :show-count="true"
+                :normalizer="normalizer"
+                :disabled="addOption"
+                @select="change"
+                placeholder="请选择上级菜单"/>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
           <el-col :span="24">
             <el-form-item label="菜单类型" prop="menuType">
-              <el-radio-group v-model="form.menuType">
+              <el-radio-group v-model="form.menuType" disabled>
                 <el-radio label="M">目录</el-radio>
                 <el-radio label="C">菜单</el-radio>
                 <el-radio label="F">权限</el-radio>
@@ -204,8 +215,16 @@
 <script>
 // 引入菜单管理相关api
 import { updateMenu, listAllMenus, selectMenuTree, deleteMenuById, getMenuById, addMenu } from '@/api/system/menu/menu'
+// 引入树结构下拉菜单组件
+import Treeselect from '@riophae/vue-treeselect'
+// 引入树结构下拉菜单样式
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+
 export default {
   name: 'Menu',
+  components: {
+    Treeselect
+  },
   data() {
     return {
       // 是否启用遮罩层,请求后台时出现进度条(如果请求响应很快的话,可能看不到)
@@ -213,6 +232,10 @@ export default {
       loading: false,
       // 数据列表中数据
       menuTableList: [],
+      // 菜单树结构数据
+      menuTreeOptions: [],
+      // 判断上级菜单是否可以修改，如果是操作栏新增那么可以选择，如果是从某行数据进行新增，则默认认为新增对应菜单之下的子菜单
+      addOption: false,
       // 模态框的标题
       title: '',
       // 是否显示模态框
@@ -233,6 +256,9 @@ export default {
         // 触发校验的方式 trigger: 'blur'  失去焦点时触发
         menuName: [
           { required: true, message: '菜单名称不能为空', trigger: 'blur' }
+        ],
+        parentId: [
+          { required: true, message: '上级名称不能为空', trigger: 'blur' }
         ]
       }
     }
@@ -257,8 +283,8 @@ export default {
       listAllMenus(this.queryParams).then(res => {
         // 构造菜单数据为树形结构
         this.menuTableList = this.handleTree(res.data, 'menuId')
-        // 将构造后的数据传递给数据类表绑定的data数据
-        // this.menuTableList = res.data
+        // 将构造后的数据传递给菜单树结构
+        this.menuTreeOptions = this.menuTableList
         // 关闭遮罩
         this.loading = false
       })
@@ -280,11 +306,51 @@ export default {
     handleAdd(row) {
       // 打开模态框
       this.open = true
+      // 设置模态框标题
+      this.title = '新增菜单信息'
+      // 设置上级菜单为可选状态
+      this.addOption = false
       // 重置表单
       this.reset()
-      // 如果是从操作栏点击新增，默认选中目录按钮
-      // 如果是从数据行中点击新增，则默认选中下一级，比如在目录行点击新增，那么表示要添加的为菜单
-      // 那么如果是从权限行，就不应该有新增了
+      // 构造上级菜单数据
+      this.getTreeSelect()
+      // 判断添加按钮时从操作栏点击还是从一行数据中点击
+      // 此时表单已经重置过了
+      if (row.menuId != null) {
+        // 设置上级菜单不可选择
+        this.addOption = true
+        this.form.parentId = row.menuId
+        if (row.menuType === 'M') {
+          this.form.menuType = 'C'
+        } else if (row.menuType === 'C') {
+          this.form.menuType = 'F'
+        }
+      }
+    },
+    // 查询菜单下拉树的数据
+    getTreeSelect() {
+      selectMenuTree().then(res => {
+        this.menuTreeOptions = []
+        const menu = {
+          menuId: 0,
+          menuName: '根菜单',
+          children: []
+        }
+        menu.children = this.handleTree(res.data, 'menuId')
+        this.menuTreeOptions.push(menu)
+      })
+    },
+    // 自定义键名
+    normalizer(node) {
+      // 删除有children属性，但是子节点为空的节点的children属性
+      if (node.children && !node.children.length) {
+        delete node.children
+      }
+      return {
+        id: node.menuId,
+        label: node.menuName,
+        children: node.children
+      }
     },
     // 修改操作,打开修改模态框
     handleUpdate(row) {
@@ -294,6 +360,10 @@ export default {
       this.open = true
       // 重置表单
       this.reset()
+      // 设置模态框标题
+      this.title = '修改菜单信息'
+      // 查询上级菜单
+      this.getTreeSelect()
       // 根据id查询对应字典类型，并填充到form中
       // 这里通过id查询到的数据是一整条数据，填充到了form中，并不影响
       // getDictTypeById(row.dictId).then(res => {
@@ -323,6 +393,9 @@ export default {
           this.msgSuccess('删除成功')
           // 重新查询数据列表
           this.getMenuList()
+        }).catch(e => {
+          // 出现异常关闭遮罩，比如删除的节点含有子节点
+          this.loading = false
         })
       }).catch(() => {
         // 关闭遮罩
@@ -419,6 +492,19 @@ export default {
       }
       // 重置表单,对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
       this.resetForm('form')
+    },
+    // 切换上级菜单触发方法，控制菜单类型的选中问题
+    change(node) {
+      // 如果选择根节点，菜单类型为目录M
+      // 如果选择目录，菜单类型为菜单C
+      //  如果选择菜单，菜单类型为权限F
+      if (node.menuId === 0) {
+        this.form.menuType = 'M'
+      } else if (node.menuType === 'M') {
+        this.form.menuType = 'C'
+      } else {
+        this.form.menuType = 'F'
+      }
     }
   }
 }
