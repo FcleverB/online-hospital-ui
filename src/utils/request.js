@@ -65,12 +65,16 @@ service.interceptors.response.use(
       })
     } else if (res.code === 500) {
       Notification.error({
-        title: '服务器内部出现异常，请联系管理员'
+        title: '错误信息',
+        message: '服务器内部出现异常，请联系管理员',
+        uration: 3000
       })
       return Promise.reject('error') // 记录错误
     } else if (res.code === 400) { // 可能是其他参数出错
       Notification.error({
-        title: res.msg
+        title: '错误信息',
+        message: res.msg,
+        duration: 3000
       })
       return Promise.reject('error') // 记录错误
     } else {
