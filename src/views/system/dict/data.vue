@@ -183,13 +183,7 @@
 
 <script>
 import { listForPage, addDictData, updateDictData, deleteDictDataByIds, getDictDataById } from '@/api/system/dict/data'
-import {
-  addDictType,
-  deleteDictTypeByIds,
-  getDictTypeById,
-  selectAllDictType,
-  updateDictType
-} from '@/api/system/dict/type'
+import { getDictTypeById, selectAllDictType } from '@/api/system/dict/type'
 export default {
   name: 'Data',
   data() {
