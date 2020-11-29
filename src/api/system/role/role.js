@@ -38,7 +38,7 @@ export function updateRole(data) {
 // 根据角色删除角色信息（含批量和删除角色-用户表和角色-菜单表数据）
 export function deleteRoleByIds(roleIds) {
   return request({
-    url: '/system/role/deleteRoleByIds' + roleIds,
+    url: '/system/role/deleteRoleByIds/' + roleIds,
     method: 'delete'
   })
 }
