@@ -393,7 +393,7 @@ export default {
           this.msgSuccess('删除成功')
           // 重新查询数据列表
           this.getMenuList()
-        }).catch(e => {
+        }).catch(() => {
           // 出现异常关闭遮罩，比如删除的节点含有子节点
           this.loading = false
         })

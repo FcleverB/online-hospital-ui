@@ -50,3 +50,11 @@ export function addMenu(data) {
     params: data
   })
 }
+
+// 根据角色ID查询该角色已分配菜单ID
+export function getMenuIdsByRoleId(roleId) {
+  return request({
+    url: '/system/menu/getMenuIdsByRoleId/' + roleId,
+    method: 'get'
+  })
+}

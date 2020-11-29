@@ -101,6 +101,10 @@
         <!--删除按钮,只要有选中数据就可用,不管一条还是多条-->
         <el-button type="danger" icon="el-icon-delete" size="mini" :disabled="!multiple" @click="handleDelete">批量删除</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <!--删除按钮,只要有选中数据就可用,不管一条还是多条-->
+        <el-button type="warning" icon="el-icon-thumb" size="mini" :disabled="!single" @click="handleAssign">分配菜单</el-button>
+      </el-col>
     </el-row>
     <!--操作栏按钮结束-->
     <!--数据列表开始-->
@@ -132,6 +136,7 @@
           <!--传递该条数据到具体处理方法中-->
           <el-button type="text" icon="el-icon-edit" size="mini" @click="handleUpdate(scope.row)">修改</el-button>
           <el-button type="text" icon="el-icon-delete" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+          <el-button type="text" icon="el-icon-thumb" size="mini" @click="handleAssign(scope.row)">分配菜单</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -207,12 +212,44 @@
       </span>
     </el-dialog>
     <!--新增和修改模态框结束-->
+    <!--分配菜单模态框开始-->
+    <el-dialog
+      :title="title"
+      :visible.sync="assignOpen"
+      width="500px"
+      center
+      append-to-body>
+      <!--
+      node-key：每个树节点用来作为唯一标识的属性，整棵树应该是唯一的
+        :props
+          label：	指定节点标签为节点对象的某个属性值
+          children：指定子树为节点对象的某个属性值
+
+      -->
+      <el-tree
+        ref="tree"
+        :data="menuOptions"
+        show-checkbox
+        node-key="menuId"
+        highlight-current
+        empty-text="数据加载中，请稍后ing"
+        :props="{id: 'menuId', children: 'children', label: 'menuName'}"
+      >
+      </el-tree>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleAssignSave">保 存</el-button>
+        <el-button @click="cancelAssign">取 消</el-button>
+      </span>
+    </el-dialog>
+    <!--分配菜单模态框结束-->
   </div>
 </template>
 
 <script>
 // 引入字典类型相关api
-import { listRoleForPage, addRole, updateRole, deleteRoleByIds, getRoleById } from '@/api/system/role/role'
+import { listRoleForPage, addRole, updateRole, deleteRoleByIds, getRoleById,saveRoleAndMenu } from '@/api/system/role/role'
+import { getMenuIdsByRoleId, selectMenuTree } from '@/api/system/menu/menu'
+import { handleTree } from '@/utils/hospital-uitls'
 export default {
   name: 'Role',
   data() {
@@ -232,8 +269,10 @@ export default {
       roleTableList: [],
       // 模态框的标题
       title: '',
-      // 是否显示模态框
+      // 是否显示新增和修改的模态框
       open: false,
+      // 是否显示分配菜单模态框
+      assignOpen: false,
       // 查询条件中状态的码表(正常,停用)
       statusOptions: [],
       // 查询条件中选择的日期范围数据
@@ -258,7 +297,11 @@ export default {
         roleCode: [
           { required: true, message: '角色码值不能为空', trigger: 'blur' }
         ]
-      }
+      },
+      // 菜单树的数据
+      menuOptions: [],
+      // 当前选中的角色id
+      currentRoleId: undefined
     }
   },
   // 生命周期,钩子函数  在实例创建完成后被立即调用
@@ -477,6 +520,48 @@ export default {
       }
       // 重置表单,对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
       this.resetForm('form')
+    },
+    // 打开分配菜单的模态框
+    handleAssign(row) {
+      // 设置所选的角色id   行数据或者单选一个值
+      this.currentRoleId = row.roleId || this.ids[0]
+      // 打开模态框
+      this.assignOpen = true
+      // 标题
+      this.title = '分配菜单'
+      // 加载菜单数据，并进行树形处理
+      selectMenuTree().then(res => {
+        this.menuOptions = handleTree(res.data, 'menuId')
+      })
+      // 根据角色id查询已经分配的子菜单节点
+      getMenuIdsByRoleId(this.currentRoleId).then(res => {
+        this.$refs.tree.setCheckedKeys(res.data)
+      })
+    },
+    // 分配菜单模态框保存操作
+    handleAssignSave() {
+      // 获取已经选中的菜单keys
+      const allKeys = this.$refs.tree.getCheckedKeys()
+      // 获取半选的菜单keys（比如某个父菜单的子菜单不是全部选中，此时父菜单就处于半选状态）
+      const halfKeys = this.$refs.tree.getHalfCheckedKeys()
+      // 组装为完整的menuIds
+      const menuIds = halfKeys.concat(allKeys)
+      // 保存
+      saveRoleAndMenu(this.currentRoleId, menuIds).then(res => {
+        // 显示修改成功的消息,调用全局消息
+        this.msgSuccess('分配菜单成功')
+        // 关闭模态框
+        this.assignOpen = false
+      }).catch(() => {
+        this.msgError('分配菜单失败')
+      })
+    },
+    // 分配菜单模态框取消操作
+    cancelAssign() {
+      // 关闭模态框
+      this.assignOpen = false
+      // 清空菜单树的数据
+      this.menuOptions = []
     }
   }
 }
