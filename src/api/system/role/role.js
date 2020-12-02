@@ -54,7 +54,7 @@ export function selectAllRoles() {
 // 保存角色和菜单的关联关系
 export function saveRoleAndMenu(roleId, menuIds) {
   // 菜单id可能为空，默认设置一个-1
-  if (menuIds.length === 0){
+  if (menuIds.length === 0) {
     menuIds = [-1]
   }
   return request({

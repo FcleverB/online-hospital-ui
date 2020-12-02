@@ -95,7 +95,7 @@
     </el-row>
     <!--操作栏按钮结束-->
     <!--数据列表开始-->
-    <el-table v-loading="loading" border :data="dictDataTableList" @selection-change="handleSelectionChnage">
+    <el-table v-loading="loading" border :data="dictDataTableList" @selection-change="handleSelectionChange">
       <!--el-table-column:每一行中的每一列
         prop:对应从:data中取出的数据
         align:对齐方式
@@ -370,7 +370,7 @@ export default {
       this.resetForm('form')
     },
     // 改变数据列表第一列多选框选中状态所触发的方法,selection为选择的内容
-    handleSelectionChnage(selection) {
+    handleSelectionChange(selection) {
       // selection保存着勾选的一条数据，以数组形式存储，对象为一个单位
       this.single = selection.length === 1
       this.multiple = selection.length > 1

@@ -101,7 +101,7 @@
       data:数据列表中显示的数据从哪获取
       @selection-change:当选择项发生变化时会触发该事件
     -->
-    <el-table v-loading="loading" border :data="deptTableList" @selection-change="handleSelectionChnage">
+    <el-table v-loading="loading" border :data="deptTableList" @selection-change="handleSelectionChange">
       <!--el-table-column:每一行中的每一列
         prop:对应从:data中取出的数据
         align:对齐方式
@@ -271,13 +271,14 @@ export default {
   },
   // 生命周期,钩子函数  在实例创建完成后被立即调用
   created() {
-    // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
-    this.getDeptList()
     // 使用全局的根据字典类型查询字典数据的方法来获取查询条件中的状态信息
     this.getDataByType('sys_normal_disable').then(res => {
       // 将查询到的状态信息保存到当前页面对应的属性中
       this.statusOptions = res.data
     })
+    // 最后查询列表
+    // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
+    this.getDeptList()
   },
   methods: {
     // 查询数据列表数据
@@ -374,7 +375,7 @@ export default {
       })
     },
     // 改变数据列表第一列多选框选中状态所触发的方法,selection为选择的内容
-    handleSelectionChnage(selection) {
+    handleSelectionChange(selection) {
       // selection保存着勾选的一条数据，以数组形式存储，对象为一个单位
       this.single = selection.length === 1
       this.multiple = selection.length > 1

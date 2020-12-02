@@ -1,7 +1,7 @@
 // 引入路由
 import { asyncRoutes, constantRoutes, lastRoute } from '@/router'
 // 引入api中获取菜单信息的接口
-import { getMenus } from '@/api/user'
+import { getMenus } from '@/api/system/login/login'
 
 const state = {
   routes: []

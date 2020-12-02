@@ -265,13 +265,13 @@ export default {
   },
   // 生命周期,钩子函数  在实例创建完成后被立即调用
   created() {
-    // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
-    this.getMenuList()
     // 使用全局的根据字典类型查询字典数据的方法来获取查询条件中的状态信息
     this.getDataByType('sys_normal_disable').then(res => {
       // 将查询到的状态信息保存到当前页面对应的属性中
       this.statusOptions = res.data
     })
+    // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
+    this.getMenuList()
   },
   methods: {
     // 查询数据列表数据
