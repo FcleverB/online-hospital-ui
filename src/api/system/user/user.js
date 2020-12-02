@@ -58,3 +58,15 @@ export function selectAllUser() {
     method: 'get'
   })
 }
+
+// 保存用户和角色的关联关系
+export function saveUserAndRole(userId, roleIds) {
+  // 角色id可能为空，默认设置一个-1
+  if (roleIds.length === 0) {
+    roleIds = [-1]
+  }
+  return request({
+    url: '/system/user/saveUserAndRole/' + userId + '/' + roleIds,
+    method: 'post'
+  })
+}

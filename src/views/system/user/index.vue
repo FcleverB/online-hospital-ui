@@ -124,6 +124,9 @@
         <el-button type="danger" icon="el-icon-delete" size="mini" :disabled="!multiple" @click="handleDelete">批量删除</el-button>
       </el-col>
       <el-col :span="1.5">
+        <el-button type="warning" icon="el-icon-refresh" size="mini" :disabled="!single" @click="handleAssign">分配角色</el-button>
+      </el-col>
+      <el-col :span="1.5">
         <!--重置密码  多选-->
         <el-button type="info" icon="el-icon-refresh" size="mini" @click="resetPassword">重置密码</el-button>
       </el-col>
@@ -181,6 +184,7 @@
           <!--传递该条数据到具体处理方法中-->
           <el-button type="text" icon="el-icon-edit" size="mini" @click="handleUpdate(scope.row)">修改</el-button>
           <el-button v-if="scope.row.userId != 1" type="text" icon="el-icon-delete" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+          <el-button v-if="scope.row.userId != 1" type="text" icon="el-icon-refresh" size="mini" @click="handleAssign(scope.row)">分配角色</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -368,29 +372,26 @@
     <el-dialog
       :title="title"
       :visible.sync="assignOpen"
-      width="500px"
+      width="800px"
       center
       append-to-body>
-      <!--
-      node-key：每个树节点用来作为唯一标识的属性，整棵树应该是唯一的
-        :props
-          label：	指定节点标签为节点对象的某个属性值
-          children：指定子树为节点对象的某个属性值
-
-      -->
-      <el-tree
-        ref="tree"
-        :data="roleOptions"
-        show-checkbox
-        node-key="menuId"
-        highlight-current
-        empty-text="数据加载中，请稍后ing"
-        :props="{id: 'menuId', children: 'children', label: 'menuName'}"
-      >
-      </el-tree>
+      <el-table ref="roleList" v-loading="loading" border :data="roleTableList" @selection-change="handleRoleSelectionChange">
+        <!--el-table-column:每一行中的每一列
+          prop:对应从:data中取出的数据
+          align:对齐方式
+          label:列名
+          show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
+        -->
+        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column label="角色ID" prop="roleId" align="center" width="100"/>
+        <el-table-column label="角色名称" prop="roleName" align="center" :show-overflow-tooltip="true" />
+        <el-table-column label="角色码值" prop="roleCode" align="center" :show-overflow-tooltip="true"></el-table-column>
+        <el-table-column label="备注" prop="remark" align="center" :show-overflow-tooltip="true" />
+        <el-table-column label="创建时间" prop="createTime" align="center" width="180" />
+      </el-table>
       <span slot="footer" class="dialog-footer">
-<!--        <el-button type="primary" @click="handleAssignSave">保 存</el-button>-->
-<!--        <el-button @click="cancelAssign">取 消</el-button>-->
+        <el-button type="primary" @click="handleAssignSave">保 存</el-button>
+        <el-button @click="cancelAssign">取 消</el-button>
       </span>
     </el-dialog>
     <!--分配菜单模态框结束-->
@@ -401,7 +402,10 @@
 // 引入科室管理api
 import { selectAllDept } from '@/api/system/dept/dept'
 // 引入用户管理相关api
-import { listUserForPage, addUser, updateUser, deleteUserByIds, getUserById, resetPassword } from '@/api/system/user/user'
+import { listUserForPage, addUser, updateUser, deleteUserByIds, getUserById, resetPassword,saveUserAndRole } from '@/api/system/user/user'
+// 引入角色管理api，获取所有角色信息
+import { selectAllRoles, getRoleIdsByUserId } from '@/api/system/role/role'
+
 export default {
   name: 'User',
   data() {
@@ -411,6 +415,8 @@ export default {
       loading: false,
       // 选中的字典类型的id集合
       ids: [],
+      // 选中的角色id集合
+      roleIds: [],
       // 判断是否选中了单条记录,进而控制一些页面行为,比如选中了单个可以进行修改操作
       single: false,
       // 判断是否选中了多条记录,进行控制一些页面行为,比如选中了多个可以进行批量删除操作
@@ -462,8 +468,8 @@ export default {
           { required: true, message: '角色码值不能为空', trigger: 'blur' }
         ]
       },
-      // 角色树的数据
-      roleOptions: [],
+      // 角色的数据
+      roleTableList: [],
       // 当前选中的用户id
       currentUserId: undefined
     }
@@ -610,6 +616,11 @@ export default {
       this.multiple = selection.length > 1
       // 保存勾选的数据的id  item表示取出数组中一个数据，然后获取到该条数据的id，遍历完成后，ids拿到所有勾选的id
       this.ids = selection.map(item => item.userId)
+    },
+    // 角色列表勾选触发
+    handleRoleSelectionChange(selection) {
+      // 保存勾选的角色数据的id  item表示取出数组中一个数据，然后获取到该条数据的id，遍历完成后，ids拿到所有勾选的id
+      this.roleIds = selection.map(item => item.roleId)
     },
     // 转换字典数据(code值与实际显示值)
     statusFormatter(row) {
@@ -764,6 +775,64 @@ export default {
           this.msgInfo('重置已取消')
         })
       }
+    },
+    // 分配菜单模态框
+    handleAssign(row) {
+      // 获取要设置角色的用户id
+      this.currentUserId = row.userId || this.ids[0]
+      // 打开模态框
+      this.assignOpen = true
+      // 标题
+      this.title = '分配角色'
+      // 获取所有角色信息，并保存到数组中
+      selectAllRoles().then(res1 => {
+        this.roleTableList = res1.data
+        /**
+         * this.$nextTick()
+         *    Vue更新DOM的时候是异步执行的。
+         *    Vue实现响应式并不是数据发生变化后DOM立即变化，而是按照一定的策略进行DOM更新
+         *    在修改数据之后使用nextTick，可以在该方法的回调中获取到最新的DOM
+         *    在此处，通过查询所有的角色信息，对roleTableList的数据进行了更新，
+         *    然后我们需要继续查询当前选择的用户id来查询该用户已经分配过的角色，然后在
+         *    roleTableList中的对应角色数据进行选中，因此要对更新的roleTableList进行
+         *    过滤
+         */
+        // 如果是点击行数据的分配，还需要查询当前用户已经存在的角色，并自动勾选
+        this.$nextTick(() => {
+          // 根据当前用户id查询该用户所已分配的角色id
+          getRoleIdsByUserId(this.currentUserId).then(res2 => {
+            res2.data.filter(f1 => {
+              this.roleTableList.filter(f2 => {
+                if (f1 === f2.roleId) {
+                  // 选中表格checkbox
+                  this.$refs.roleList.toggleRowSelection(f2, true)
+                }
+              })
+            })
+          })
+        })
+      })
+    },
+    // 保存分配角色信息
+    handleAssignSave() {
+      // 获取勾选的角色id数组
+      const roleIds = this.roleIds
+      // 保存方法
+      saveUserAndRole(this.currentUserId, roleIds).then(res => {
+        // 显示修改成功的消息,调用全局消息
+        this.msgSuccess('分配角色成功')
+        // 关闭模态框
+        this.assignOpen = false
+      }).catch(() => {
+        this.msgError('分配角色失败')
+      })
+    },
+    // 取消分配角色操作
+    cancelAssign() {
+      // 关闭模态框
+      this.assignOpen = false
+      // 清空角色数据
+      this.roleTableList = []
     }
   }
 }

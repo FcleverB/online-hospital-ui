@@ -62,3 +62,11 @@ export function saveRoleAndMenu(roleId, menuIds) {
     method: 'post'
   })
 }
+
+// 根据用户id查询对应用户的所有角色
+export function getRoleIdsByUserId(userId) {
+  return request({
+    url: '/system/role/getRoleIdsByUserId/' + userId,
+    method: 'get'
+  })
+}
