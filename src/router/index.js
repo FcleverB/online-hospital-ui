@@ -114,7 +114,7 @@ export const asyncRoutes = [
       },
       {
         path: 'notice',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/system/notice/index'),
         name: '/system/notice',
         meta: {
           title: '通知公告',

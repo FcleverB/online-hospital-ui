@@ -461,11 +461,11 @@ export default {
       // ----------------
       rules: {
         // 字典名称
-        deptId: [
-          { required: true, message: '角色名称不能为空', trigger: 'blur' }
-        ],
         userName: [
-          { required: true, message: '角色码值不能为空', trigger: 'blur' }
+          { required: true, message: '用户名称不能为空', trigger: 'blur' }
+        ],
+        phone: [
+          { required: true, message: '联系电话不能为空', trigger: 'blur' }
         ]
       },
       // 角色的数据
