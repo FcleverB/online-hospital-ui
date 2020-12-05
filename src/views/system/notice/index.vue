@@ -188,13 +188,20 @@
             >{{ dict.dictLabel }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="内容" v-model="form.noticeContent">
+        <el-form-item v-if="!isView" label="内容" v-model="form.noticeContent">
           <markdown-editor
             ref="noticeContent"
             v-model="form.noticeContent"
             height="300px"
             :options="{hideModeSwitch:true,previewStyle:'tab'}"
           />
+        </el-form-item>
+        <el-form-item v-else label="内容" prop="noticeContent">
+          <el-input
+            type="textarea"
+            autosize
+            v-model="form.noticeContent">
+          </el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer" v-if="!isView">
