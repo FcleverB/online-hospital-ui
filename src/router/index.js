@@ -141,10 +141,10 @@ export const asyncRoutes = [
       },
       {
         path: 'ins_fee',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/system/checkItem/index'),
         name: '/system/ins_fee',
         meta: {
-          title: '检查费用设置',
+          title: '检查项目管理',
           icon: 'international'
         }
       },
@@ -153,7 +153,7 @@ export const asyncRoutes = [
         component: () => import('@/views/error-page/404'),
         name: '/system/reg_fee',
         meta: {
-          title: '挂号费用设置',
+          title: '挂号费用管理',
           icon: 'international'
         }
       }
