@@ -150,7 +150,7 @@ export const asyncRoutes = [
       },
       {
         path: 'reg_fee',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/system/registeredItem/index'),
         name: '/system/reg_fee',
         meta: {
           title: '挂号费用管理',

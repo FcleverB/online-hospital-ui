@@ -9,7 +9,7 @@
       label-width:设置每个标签的宽度,指定在el-form上时,其直接子标签form-item会继承该值
     -->
     <el-form ref="queryForm" :model="queryParams" :inline="true" label-width="68px">
-      <el-form-item label="项目名称" prop="checkItemName">
+      <el-form-item label="挂号项目名称" prop="regItemName" label-width="100px">
         <!--input输入框
           v-model:指定与queryParams中哪个属性进行动态绑定
           placeholder:输入框内默认填充的数据,获得焦点后消失
@@ -17,49 +17,12 @@
           size:输入框大小,影响内容大小
         -->
         <el-input
-          v-model="queryParams.checkItemName"
-          placeholder="请输入项目名称"
+          v-model="queryParams.regItemName"
+          placeholder="请输入挂号项目名称"
           clearable
           size="small"
-          style="width:140px"
+          style="width:180px"
         />
-      </el-form-item>
-      <el-form-item label="关键字" prop="keywords">
-        <!--input输入框
-          v-model:指定与queryParams中哪个属性进行动态绑定
-          placeholder:输入框内默认填充的数据,获得焦点后消失
-          clearable:是否可以一键清除
-          size:输入框大小,影响内容大小
-        -->
-        <el-input
-          v-model="queryParams.keywords"
-          placeholder="请输入关键字"
-          clearable
-          size="small"
-          style="width:140px"
-        />
-      </el-form-item>
-      <el-form-item label="项目类型" prop="typeId">
-        <!--select下拉框-->
-        <el-select
-          v-model="queryParams.typeId"
-          placeholder="项目类型"
-          clearable
-          size="small"
-          style="width:140px"
-        >
-          <!--下拉框内容,遍历typeOptions属性,这里面保存了查询的状态的码表
-            key:唯一标注
-            label:标签
-            value:实际存储的值
-          -->
-          <el-option
-            v-for="dict in typeOptions"
-            :key="dict.dictValue"
-            :label="dict.dictLabel"
-            :value="dict.dictValue"
-          />
-        </el-select>
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <!--select下拉框-->
@@ -119,7 +82,7 @@
       data:数据列表中显示的数据从哪获取
       @selection-change:当选择项发生变化时会触发该事件
     -->
-    <el-table v-loading="loading" border :data="checkItemTableList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" border :data="registerItemTableList" @selection-change="handleSelectionChange">
       <!--el-table-column:每一行中的每一列
         prop:对应从:data中取出的数据
         align:对齐方式
@@ -127,13 +90,9 @@
         show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
       -->
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="检查项目id" prop="checkItemId" align="center" />
-      <el-table-column label="项目名称" prop="checkItemName" align="center" />
-      <el-table-column label="关键字" prop="keywords" align="center" />
-      <el-table-column label="项目单价" prop="unitPrice" align="center" />
-      <el-table-column label="项目成本" prop="cost" align="center" />
-      <el-table-column label="计量单位" prop="unit" align="center" />
-      <el-table-column label="项目类型" prop="typeId" align="center" :formatter="typeFormatter" />
+      <el-table-column label="挂号项目id" prop="regItemId" align="center" />
+      <el-table-column label="挂号项目名称" prop="regItemName" align="center" />
+      <el-table-column label="挂号费" prop="regItemFee" align="center" />
       <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter"/>
       <el-table-column label="创建时间" prop="createTime" align="center" width="180" />
       <el-table-column label="操作" align="center">
@@ -186,63 +145,12 @@
         rules:做表单数据前端校验
         label-width:标签宽度(文字)
       -->
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px" :disabled="isView">
-        <el-form-item label="项目名称" prop="checkItemName">
-          <el-input v-model="form.checkItemName" placeholder="请输入项目名称" clearable size="small" />
+      <el-form ref="form" :model="form" :rules="rules" label-width="110px">
+        <el-form-item label="挂号项目名称" prop="regItemName">
+          <el-input v-model="form.regItemName" placeholder="请输入挂号项目名称" clearable size="small" />
         </el-form-item>
-        <el-form-item label="项目类型" prop="typeId">
-          <!--select下拉框-->
-          <el-select
-            v-model="form.typeId"
-            placeholder="项目类型"
-            clearable
-            style="width: 370px"
-            size="small"
-          >
-            <!--下拉框内容,遍历typeOptions属性,这里面保存了查询的状态的码表
-              key:唯一标注
-              label:标签
-              value:实际存储的值
-            -->
-            <el-option
-              v-for="dict in typeOptions"
-              :key="dict.dictValue"
-              :label="dict.dictLabel"
-              :value="dict.dictValue"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="关键字" prop="keywords">
-          <el-input
-            v-model="form.keywords"
-            placeholder="请输入关键字"
-            clearable
-            size="small"
-          />
-        </el-form-item>
-        <el-form-item label="项目单价" prop="unitPrice">
-          <el-input
-            v-model="form.unitPrice"
-            placeholder="请输入项目单价"
-            clearable
-            size="small"
-          />
-        </el-form-item>
-        <el-form-item label="项目成本" prop="cost">
-          <el-input
-            v-model="form.cost"
-            placeholder="请输入项目成本"
-            clearable
-            size="small"
-          />
-        </el-form-item>
-        <el-form-item label="单位" prop="unit">
-          <el-input
-            v-model="form.unit"
-            placeholder="请输入单位"
-            clearable
-            size="small"
-          />
+        <el-form-item label="挂号费用" prop="regItemFee">
+          <el-input-number v-model="form.regItemFee" :precision="2" :step="0.1" :min="0"></el-input-number>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <!--单选框-->
@@ -266,10 +174,10 @@
 </template>
 
 <script>
-// 引入检查项目相关api
-import { updateCheckItem, listCheckItemForPage, deleteCheckItemByIds, getCheckItemById, addCheckItem } from '@/api/system/checkItem/checkItem'
+// 引入挂号项目相关api
+import { updateRegisteredItem, listRegisteredItemForPage, deleteRegisteredItemByIds, getRegisteredItemById, addRegisteredItem } from '@/api/system/registeredItem/registeredItem'
 export default {
-  name: 'CheckItem',
+  name: 'RegisteredItem',
   data() {
     return {
       // 是否启用遮罩层,请求后台时出现进度条(如果请求响应很快的话,可能看不到)
@@ -284,22 +192,18 @@ export default {
       // 分页数据总条数
       total: 0,
       // 数据列表中数据(字典类型)
-      checkItemTableList: [],
+      registerItemTableList: [],
       // 模态框的标题
       title: '',
       // 是否显示模态框
       open: false,
-      // 查询条件中项目类型
-      typeOptions: [],
       // 状态
       statusOptions: [],
       // 查询参数
       queryParams: {
         pageNum: 1, // 默认第一页
         pageSize: 10, // 每页默认10条
-        checkItemName: undefined, // 项目名称
-        keywords: '', // 关键字
-        typeid: undefined, // 项目类型
+        regItemName: undefined, // 挂号项目名称
         status: undefined // 状态
       },
       // 表单数据(添加和修改的模态框中的数据)
@@ -307,21 +211,9 @@ export default {
       // 表单校验(前端校验,失去焦点就会触发)
       // 给对应属性添加必填校验之后,会在label处显示*号
       rules: {
-        // 项目名称
-        checkItemName: [
-          { required: true, message: '项目名称不能为空', trigger: 'blur' }
-        ],
-        // 项目类型
-        typeId: [
-          { required: true, message: '项目类型不能为空', trigger: 'blur' }
-        ],
-        // 项目单价
-        unitPrice: [
-          { required: true, message: '项目单价不能为空', trigger: 'blur' }
-        ],
-        // 项目成本
-        cost: [
-          { required: true, message: '项目成本不能为空', trigger: 'blur' }
+        // 挂号费名称
+        regItemName: [
+          { required: true, message: '挂号项目名称不能为空', trigger: 'blur' }
         ]
       }
     }
@@ -333,25 +225,21 @@ export default {
       // 将查询到的状态信息保存到当前页面对应的属性中
       this.statusOptions = res.data
     })
-    this.getDataByType('his_inspection_type').then(res => {
-      // 将查询到的状态信息保存到当前页面对应的属性中
-      this.typeOptions = res.data
-    })
     // 最后查询列表
     // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
-    this.getCheckItemList()
+    this.getRegisteredItemList()
   },
   methods: {
     // 查询数据列表数据
-    getCheckItemList() {
+    getRegisteredItemList() {
       // 打开遮罩
       this.loading = true
       // 调用分页查询的api方法
-      // listCheckItemForPage(this.queryParams).then(res => {
+      // listRegisteredItemForPage(this.queryParams).then(res => {
       // 通过addDateRange封装起始时间和结束时间
-      listCheckItemForPage(this.queryParams).then(res => {
+      listRegisteredItemForPage(this.queryParams).then(res => {
         // 将分页数据传递给数据类表绑定的data数据
-        this.checkItemTableList = res.data
+        this.registerItemTableList = res.data
         // 查询到数据了,就要显示分页了
         this.total = res.total
         // 关闭遮罩
@@ -362,21 +250,21 @@ export default {
     handleQuery() {
       // 执行实际的查询方法
       // 因为输入的查询条件实时与queryParams动态绑定
-      this.getCheckItemList()
+      this.getRegisteredItemList()
     },
     // 清空查询条件操作
     resetQuery() {
       // 清空查询数据
       this.resetForm('queryForm')
       // 重新查询数据列表,相当于执行一次无查询条件的查询操作,如果不调用这个方法,那么清空操作后,数据列表不会同步改变
-      this.getCheckItemList()
+      this.getRegisteredItemList()
     },
     // 添加操作,打开添加模态框
     handleAdd() {
       // 打开模态框
       this.open = true
       // 设置标题
-      this.title = '添加检查项目信息'
+      this.title = '添加挂号项目信息'
       // 重置表单
       this.reset()
     },
@@ -384,22 +272,22 @@ export default {
     handleUpdate(row) {
       // 如果是点击数据列表上方的修改按钮时，是不会传递row数据的
       // 如果是点击每行记录后面的修改链接时可以拿到row数据
-      // 如果row.checkItemId为undefined，那么就表示点击的是修改按钮，因此要ids的第一个数据就是选中的要修改的数据
-      // 然后将该checkItemId作为查询条件向后台发送请求即可
-      // const checkItemId = row.checkItemId === undefined ? this.ids[0] : row.checkItemId
-      // 下面这种方式，如果是点击修改按钮得到的数据，那么checkItemId是一个仅有一个值的数组，传递到后台也可以匹配参数
+      // 如果row.regItemId为undefined，那么就表示点击的是修改按钮，因此要ids的第一个数据就是选中的要修改的数据
+      // 然后将该regItemId作为查询条件向后台发送请求即可
+      // const regItemId = row.regItemId === undefined ? this.ids[0] : row.regItemId
+      // 下面这种方式，如果是点击修改按钮得到的数据，那么regItemId是一个仅有一个值的数组，传递到后台也可以匹配参数
       // js利用|| 或者 && 简便赋值方式
-      const checkItemId = row.checkItemId || this.ids
+      const regItemId = row.regItemId || this.ids
       // 打开模态框
       this.open = true
       // 设置标题
-      this.title = '修改检查项目信息'
+      this.title = '修改挂号项目信息'
       // 重置表单
       this.reset()
       // 根据id查询对应字典类型，并填充到form中
       // 这里通过id查询到的数据是一整条数据，填充到了form中，并不影响
-      // getDictTypeById(row.checkItemId).then(res => {
-      getCheckItemById(checkItemId).then(res => {
+      // getDictTypeById(row.regItemId).then(res => {
+      getRegisteredItemById(regItemId).then(res => {
         this.form = res.data
       })
       // 优化点，row已经是一整条数据了，为啥还要走后台查询呢？
@@ -410,19 +298,19 @@ export default {
       // 打开模态框
       this.open = true
       // 设置标题
-      this.title = '查看检查项目信息'
+      this.title = '查看挂号项目信息'
       this.form = row
     },
     // 删除操作(含批量)
     handleDelete(row) {
-      // 根据row.checkItemId是否为undefined来判断是批量删除还是单个删除
-      // const checkItemId = row.checkItemId === undefined ? this.ids : row.checkItemId
-      // const checkItemId = row.checkItemId === undefined ? this.ids[0] : row.checkItemId
-      // 下面这种方式，如果是点击删除按钮得到的数据，那么checkItemId是一个含有多个值的数组，传递到后台也可以匹配参数
+      // 根据row.regItemId是否为undefined来判断是批量删除还是单个删除
+      // const regItemId = row.regItemId === undefined ? this.ids : row.regItemId
+      // const regItemId = row.regItemId === undefined ? this.ids[0] : row.regItemId
+      // 下面这种方式，如果是点击删除按钮得到的数据，那么regItemId是一个含有多个值的数组，传递到后台也可以匹配参数
       // js利用|| 或者 && 简便赋值方式
-      const checkItemId = row.checkItemId || this.ids
+      const regItemId = row.regItemId || this.ids
       // 确认框显示
-      this.$confirm('此操作将永久删除该检查项目信息, 是否继续?', '提示', {
+      this.$confirm('此操作将永久删除该挂号项目信息, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -430,13 +318,13 @@ export default {
         // 开启遮罩
         this.loading = true
         // 调用api执行删除操作
-        deleteCheckItemByIds(checkItemId).then(res => {
+        deleteRegisteredItemByIds(regItemId).then(res => {
           // 关闭遮罩
           this.loading = false
           // 操作成功提示
           this.msgSuccess('删除成功')
           // 重新查询数据列表
-          this.getCheckItemList()
+          this.getRegisteredItemList()
         })
       }).catch(() => {
         // 关闭遮罩
@@ -451,53 +339,50 @@ export default {
       this.single = selection.length === 1
       this.multiple = selection.length > 1
       // 保存勾选的数据的id  item表示取出数组中一个数据，然后获取到该条数据的id，遍历完成后，ids拿到所有勾选的id
-      this.ids = selection.map(item => item.checkItemId)
+      this.ids = selection.map(item => item.regItemId)
     },
     // 转换字典数据(code值与实际显示值)
     statusFormatter(row) {
       return this.transferDictCode(this.statusOptions, row.status)
-    },
-    typeFormatter(row) {
-      return this.transferDictCode(this.typeOptions, row.typeId)
     },
     // 改变每页显示条数的时候触发
     handleSizeChange(val) {
       // 更新每页显示条数
       this.queryParams.pageSize = val
       // 重新查询
-      this.getCheckItemList()
+      this.getRegisteredItemList()
     },
     // 当前页改变时触发(前一页,点击某一页,下一页,跳转某一页)
     handleCurrentChange(val) {
       // 更新需要显示的第几页数
       this.queryParams.pageNum = val
       // 重新查询
-      this.getCheckItemList()
+      this.getRegisteredItemList()
     },
     // 模态框  保存按钮
     /**
      * 因为新增和修改操作都是打开同一个模态框
      * 因此点击保存按钮时，需要区分执行的是新增操作还是修改操作
-     *    个人想法：根据this.form.checkItemId来区分
-     *              如果this.form.checkItemId不存在那么就是新增，因为checkItemId会在后台生成
+     *    个人想法：根据this.form.regItemId来区分
+     *              如果this.form.regItemId不存在那么就是新增，因为regItemId会在后台生成
      *               否则为修改操作
      */
     handleSubmit() {
       // 打开遮罩
       this.loading = true
-      if (this.form.checkItemId === undefined) {
+      if (this.form.regItemId === undefined) {
         // 添加操作
         // 表单前端校验，如果不通过就不会执行后端方法
         this.$refs['form'].validate((valid) => {
           if (valid) { // 通过校验
             // 调用保存字典类型的api，调用引入的api不可以使用this.xxx,因为不是当前页面的方法
-            addCheckItem(this.form).then(res => {
+            addRegisteredItem(this.form).then(res => {
               // 显示保存成功的消息,调用全局消息
               this.msgSuccess('保存成功')
               // 关闭遮罩
               this.loading = false
               // 列表数据重新查询
-              this.getCheckItemList()
+              this.getRegisteredItemList()
               // 关闭模态框
               this.open = false
             }).catch(() => {
@@ -516,13 +401,13 @@ export default {
         // 表单前端校验，如果不通过就不会执行后端方法
         this.$refs['form'].validate((valid) => {
           if (valid) {
-            updateCheckItem(this.form).then(res => {
+            updateRegisteredItem(this.form).then(res => {
               // 显示修改成功的消息,调用全局消息
               this.msgSuccess('修改成功')
               // 关闭遮罩
               this.loading = false
               // 列表数据重新查询
-              this.getCheckItemList()
+              this.getRegisteredItemList()
               // 关闭模态框
               this.open = false
             }).catch(() => {
@@ -546,12 +431,10 @@ export default {
     // 重置表单
     reset() {
       // 设置初始值
-      // ----------
       this.form = {
-        checkItemId: undefined,
-        noticeType: '0', // 通知类型
-        status: '0', // 状态
-        noticeContent: undefined
+        regItemName: undefined,
+        regItemFee: 0.00, // 挂号费用
+        status: '0' // 状态
       }
       // 重置表单,对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
       this.resetForm('form')
