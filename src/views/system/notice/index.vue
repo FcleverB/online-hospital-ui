@@ -43,7 +43,7 @@
         <!--select下拉框-->
         <el-select
           v-model="queryParams.noticeType"
-          placeholder="通知类型"
+          placeholder="请选择通知类型"
           clearable
           size="small"
           style="width:140px"
@@ -55,6 +55,28 @@
           -->
           <el-option
             v-for="dict in typeOptions"
+            :key="dict.dictValue"
+            :label="dict.dictLabel"
+            :value="dict.dictValue"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="状态" prop="status">
+        <!--select下拉框-->
+        <el-select
+          v-model="queryParams.status"
+          placeholder="请选择状态"
+          clearable
+          size="small"
+          style="width:140px"
+        >
+          <!--下拉框内容,遍历typeOptions属性,这里面保存了查询的状态的码表
+            key:唯一标注
+            label:标签
+            value:实际存储的值
+          -->
+          <el-option
+            v-for="dict in statusOptions"
             :key="dict.dictValue"
             :label="dict.dictLabel"
             :value="dict.dictValue"
@@ -188,7 +210,7 @@
             >{{ dict.dictLabel }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="!isView" label="内容" v-model="form.noticeContent">
+        <el-form-item v-if="!isView" label="内容" prop="noticeContent">
           <markdown-editor
             ref="noticeContent"
             v-model="form.noticeContent"
@@ -201,6 +223,13 @@
             type="textarea"
             autosize
             v-model="form.noticeContent">
+          </el-input>
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+            type="textarea"
+            autosize
+            v-model="form.remark">
           </el-input>
         </el-form-item>
       </el-form>
@@ -249,8 +278,9 @@ export default {
         pageNum: 1, // 默认第一页
         pageSize: 10, // 每页默认10条
         noticeTitle: undefined, // 通知标题
-        noticeType: '', // 通知类型
-        createBy: undefined // 创建人
+        noticeType: undefined, // 通知类型
+        createBy: undefined, // 创建人
+        status: undefined // 状态
       },
       // 表单数据(添加和修改的模态框中的数据)
       form: {},
@@ -498,7 +528,8 @@ export default {
         noticeId: undefined,
         noticeType: '0', // 通知类型
         status: '0', // 状态
-        noticeContent: undefined
+        noticeContent: undefined,
+        remark: undefined // 备注
       }
       // 重置表单,对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
       this.resetForm('form')
