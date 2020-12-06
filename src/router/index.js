@@ -117,7 +117,7 @@ export const asyncRoutes = [
         component: () => import('@/views/system/notice/index'),
         name: '/system/notice',
         meta: {
-          title: '通知公告',
+          title: '通知公告管理',
           icon: 'theme'
         }
       },
@@ -212,19 +212,19 @@ export const asyncRoutes = [
         path: 'producter',
         component: () => import('@/views/error-page/404'),
         name: '/stock/producter',
-        meta: { title: '生产厂家维护', icon: 'list' }
+        meta: { title: '生产厂家管理', icon: 'list' }
       },
       {
         path: 'medicinal',
         component: () => import('@/views/error-page/404'),
         name: '/stock/medicinal',
-        meta: { title: '药品信息维护', icon: 'list' }
+        meta: { title: '药品信息管理', icon: 'list' }
       },
       {
         path: 'provider',
         component: () => import('@/views/error-page/404'),
         name: '/stock/provider',
-        meta: { title: '供应商维护', icon: 'list' }
+        meta: { title: '供应商管理', icon: 'list' }
       },
       {
         path: 'purchase',
