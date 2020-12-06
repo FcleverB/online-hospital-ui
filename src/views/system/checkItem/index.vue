@@ -186,7 +186,7 @@
         rules:做表单数据前端校验
         label-width:标签宽度(文字)
       -->
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px" :disabled="isView">
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="项目名称" prop="checkItemName">
           <el-input v-model="form.checkItemName" placeholder="请输入项目名称" clearable size="small" />
         </el-form-item>
@@ -221,20 +221,10 @@
           />
         </el-form-item>
         <el-form-item label="项目单价" prop="unitPrice">
-          <el-input
-            v-model="form.unitPrice"
-            placeholder="请输入项目单价"
-            clearable
-            size="small"
-          />
+          <el-input-number v-model="form.unitPrice" :min="0" label="请输入项目单价"></el-input-number>
         </el-form-item>
         <el-form-item label="项目成本" prop="cost">
-          <el-input
-            v-model="form.cost"
-            placeholder="请输入项目成本"
-            clearable
-            size="small"
-          />
+          <el-input-number v-model="form.cost" :min="0"  label="请输入项目成本"></el-input-number>
         </el-form-item>
         <el-form-item label="单位" prop="unit">
           <el-input
@@ -546,12 +536,14 @@ export default {
     // 重置表单
     reset() {
       // 设置初始值
-      // ----------
       this.form = {
         checkItemId: undefined,
-        noticeType: '0', // 通知类型
-        status: '0', // 状态
-        noticeContent: undefined
+        checkItemName: undefined,
+        keywords: undefined,
+        unitPrice: 0,
+        cost: 0,
+        unit: undefined,
+        status: '0' // 状态
       }
       // 重置表单,对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
       this.resetForm('form')
