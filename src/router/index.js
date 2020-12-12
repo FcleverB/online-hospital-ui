@@ -210,7 +210,7 @@ export const asyncRoutes = [
     children: [
       {
         path: 'producter',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/erp/producter/index'),
         name: '/stock/producter',
         meta: { title: '生产厂家管理', icon: 'list' }
       },
