@@ -1,0 +1,450 @@
+<!--字典类型页面-->
+<template>
+  <div class="app-container">
+    <!--查询条件开始-->
+    <el-form ref="queryForm" :model="queryParams" :inline="true" label-width="90px">
+      <el-form-item label="供应商名称" prop="providerName">
+        <el-input
+          v-model="queryParams.providerName"
+          placeholder="请输入供应商名称"
+          clearable
+          size="small"
+          style="width:150px"
+        />
+      </el-form-item>
+      <el-form-item label="联系人" prop="contactName">
+        <el-input
+          v-model="queryParams.contactName"
+          placeholder="请输入联系人"
+          clearable
+          size="small"
+          style="width:140px"
+        />
+      </el-form-item>
+      <el-form-item label="供应商电话" prop="contactTel">
+        <el-input
+          v-model="queryParams.contactTel"
+          placeholder="请输入供应商电话"
+          clearable
+          size="small"
+          style="width:150px"
+        />
+      </el-form-item>
+      <el-form-item label="状态" prop="status">
+        <el-select
+          v-model="queryParams.status"
+          placeholder="请选择状态"
+          clearable
+          size="small"
+          style="width:140px"
+        >
+          <el-option
+            v-for="dict in statusOptions"
+            :key="dict.dictValue"
+            :label="dict.dictLabel"
+            :value="dict.dictValue"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <!--查询和清空按钮-->
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">查询</el-button>
+        <el-button type="primary" icon="el-icon-refresh" size="mini" @click="resetQuery">清空</el-button>
+      </el-form-item>
+    </el-form>
+    <!--查询条件结束-->
+    <!--操作栏按钮开始-->
+    <el-row :gutter="10" style="margin-bottom: 8px;">
+      <el-col :span="1.5">
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="success" icon="el-icon-edit" size="mini" :disabled="!single" @click="handleUpdate">修改</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="danger" icon="el-icon-delete" size="mini" :disabled="!multiple" @click="handleDelete">批量删除</el-button>
+      </el-col>
+    </el-row>
+    <!--操作栏按钮结束-->
+    <!--数据列表开始-->
+    <el-table v-loading="loading" border :data="providerTableList" @selection-change="handleSelectionChange">
+      <!--el-table-column:每一行中的每一列
+        prop:对应从:data中取出的数据
+        align:对齐方式
+        label:列名
+        show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
+      -->
+      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column label="供应商ID" prop="providerId" align="center" />
+      <el-table-column label="供应商名称" prop="providerName" align="center"/>
+      <el-table-column label="联系人" prop="contactName" align="center"/>
+      <el-table-column label="供应商电话" prop="contactTel" align="center"/>
+      <el-table-column label="银行账户" prop="bankAccount" align="center"/>
+      <el-table-column label="供应商地址" prop="providerAddress" align="center"/>
+      <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter" />
+      <el-table-column label="创建时间" prop="createTime" align="center" width="180" />
+      <el-table-column label="操作" align="center">
+        <!--slot-scope="scope" 取到当前单元格-->
+        <template slot-scope="scope">
+          <!--传递该条数据到具体处理方法中-->
+          <el-button type="text" icon="el-icon-edit" size="mini" @click="handleUpdate(scope.row)">修改</el-button>
+          <el-button type="text" icon="el-icon-delete" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!--数据列表结束-->
+    <!--底部分页开始-->
+    <!--pagination:分页控件
+      v-show:控制是否显示分页控件的条件,当数据列表中数据不为空才显示
+      current-page:当前显示第几页
+      page-sizes:可选的每页显示条数
+      page-size:默认每页显示条数
+      layout:设置分页格式:总数,每页条数,前一页,当前页,下一页,跳转至某一页
+      total:总数
+      @size-change:改变每页显示条数后触发方法
+      @current-change:当前页发生改变的时候触发的方法
+    -->
+    <el-pagination
+      v-show="total > 0"
+      :current-page="queryParams.pageNum"
+      :page-sizes="[5, 10, 20, 30]"
+      :page-size="queryParams.pageSize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+    />
+    <!--底部分页结束-->
+    <!--新增和修改模态框开始-->
+    <!--dialog:对话框
+      title:模态框标题
+      visible.sync:表示是否显示
+      center:居中
+      append-to-body:如果需要在一个对话框内部嵌套另一个对话框，需要使用append-to-body属性
+    -->
+    <el-dialog
+      :title="title"
+      :visible.sync="open"
+      width="500px"
+      center
+      append-to-body
+    >
+      <!--添加和修改的表单
+        rules:做表单数据前端校验
+        label-width:标签宽度(文字)
+      -->
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="供应商名称" prop="providerName">
+          <el-input v-model="form.providerName" placeholder="请输入供应商名称" clearable size="small" />
+        </el-form-item>
+        <el-form-item label="联系人" prop="contactName">
+          <el-input v-model="form.contactName" placeholder="请输入联系人" clearable size="small" />
+        </el-form-item>
+        <el-form-item label="供应商电话" prop="contactTel">
+          <el-input v-model="form.contactTel" placeholder="请输入供应商电话" clearable size="small" />
+        </el-form-item>
+        <el-form-item label="银行账户" prop="bankAccount">
+          <el-input v-model="form.bankAccount" placeholder="请输入银行账户" clearable size="small" />
+        </el-form-item>
+        <el-form-item label="地址" prop="providerAddress">
+          <el-input v-model="form.providerAddress" placeholder="请输入地址" clearable size="small" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <!--单选框-->
+          <el-radio-group v-model="form.status">
+            <el-radio
+              v-for="dict in statusOptions"
+              :key="dict.dictValue"
+              :label="dict.dictValue"
+              :value="dict.dictValue"
+            >{{ dict.dictLabel }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleSubmit">保 存</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </span>
+    </el-dialog>
+    <!--新增和修改模态框结束-->
+  </div>
+</template>
+
+<script>
+// 引入供应商相关api
+import { updateProvider, listProviderForPage, deleteProviderByIds, getProviderById, addProvider } from '@/api/erp/provider/provider'
+export default {
+  name: 'Provider',
+  data() {
+    return {
+      // 是否启用遮罩层,请求后台时出现进度条(如果请求响应很快的话,可能看不到)
+      // 体现在页面上就是一个页面中心一个转圈的显示
+      loading: false,
+      // 选中的字典类型的id集合
+      ids: [],
+      // 判断是否选中了单条记录,进而控制一些页面行为,比如选中了单个可以进行修改操作
+      single: false,
+      // 判断是否选中了多条记录,进行控制一些页面行为,比如选中了多个可以进行批量删除操作
+      multiple: false,
+      // 分页数据总条数
+      total: 0,
+      // 数据列表中数据(字典类型)
+      providerTableList: [],
+      // 模态框的标题
+      title: '',
+      // 是否显示模态框
+      open: false,
+      // 查询条件中状态的码表(正常,停用)
+      statusOptions: [],
+      // 查询参数
+      queryParams: {
+        pageNum: 1, // 默认第一页
+        pageSize: 10, // 每页默认10条
+        providerName: undefined, // 供应商名称
+        contactName: undefined, // 供应商联系人
+        contactTel: undefined, // 联系电话
+        status: undefined // 状态
+      },
+      // 表单数据(添加和修改的模态框中的数据)
+      form: {},
+      // 表单校验(前端校验,失去焦点就会触发)
+      // 给对应属性添加必填校验之后,会在label处显示*号
+      rules: {
+        // 供应商名称
+        providerName: [
+          { required: true, message: '供应商名称不能为空', trigger: 'blur' }
+        ],
+        // 联系电话
+        contactTel: [
+          { required: true, message: '联系电话不能为空', trigger: 'blur' }
+        ],
+        // 关键字
+        keywords: [
+          { required: true, message: '关键字不能为空', trigger: 'blur' }
+        ]
+      }
+    }
+  },
+  // 生命周期,钩子函数  在实例创建完成后被立即调用
+  created() {
+    // 使用全局的根据字典类型查询字典数据的方法来获取查询条件中的状态信息
+    this.getDataByType('sys_normal_disable').then(res => {
+      // 将查询到的状态信息保存到当前页面对应的属性中
+      this.statusOptions = res.data
+    })
+    // 最后查询列表
+    // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
+    this.getProviderList()
+  },
+  methods: {
+    // 查询数据列表数据
+    getProviderList() {
+      // 打开遮罩
+      this.loading = true
+      // 调用分页查询的api方法
+      // listForPage(this.queryParams).then(res => {
+      // 通过addDateRange封装起始时间和结束时间
+      listProviderForPage(this.queryParams).then(res => {
+        // 将分页数据传递给数据类表绑定的data数据
+        this.providerTableList = res.data
+        // 查询到数据了,就要显示分页了
+        this.total = res.total
+        // 关闭遮罩
+        this.loading = false
+      })
+    },
+    // 查询操作
+    handleQuery() {
+      // 执行实际的查询方法
+      // 因为输入的查询条件实时与queryParams动态绑定
+      this.getProviderList()
+    },
+    // 清空查询条件操作
+    resetQuery() {
+      // 清空查询数据
+      this.resetForm('queryForm')
+      // 清空查询条件中选择的日期数据
+      this.dateRange = []
+      // 重新查询数据列表,相当于执行一次无查询条件的查询操作,如果不调用这个方法,那么清空操作后,数据列表不会同步改变
+      this.getProviderList()
+    },
+    // 添加操作,打开添加模态框
+    handleAdd() {
+      // 打开模态框
+      this.open = true
+      // 重置表单
+      this.reset()
+    },
+    // 修改操作,打开修改模态框
+    handleUpdate(row) {
+      // 如果是点击数据列表上方的修改按钮时，是不会传递row数据的
+      // 如果是点击每行记录后面的修改链接时可以拿到row数据
+      // 如果row.providerId为undefined，那么就表示点击的是修改按钮，因此要ids的第一个数据就是选中的要修改的数据
+      // 然后将该providerId作为查询条件向后台发送请求即可
+      // const providerId = row.providerId === undefined ? this.ids[0] : row.providerId
+      // 下面这种方式，如果是点击修改按钮得到的数据，那么providerId是一个仅有一个值的数组，传递到后台也可以匹配参数
+      // js利用|| 或者 && 简便赋值方式
+      const providerId = row.providerId || this.ids
+      // 打开模态框
+      this.open = true
+      // 重置表单
+      this.reset()
+      // 根据id查询对应字典类型，并填充到form中
+      // 这里通过id查询到的数据是一整条数据，填充到了form中，并不影响
+      // getDictTypeById(row.providerId).then(res => {
+      getProviderById(providerId).then(res => {
+        this.form = res.data
+      })
+      // 优化点，row已经是一整条数据了，为啥还要走后台查询呢？
+      // this.form = row
+    },
+    // 删除操作(含批量)
+    handleDelete(row) {
+      // 根据row.providerId是否为undefined来判断是批量删除还是单个删除
+      // const providerId = row.providerId === undefined ? this.ids : row.providerId
+      // const providerId = row.providerId === undefined ? this.ids[0] : row.providerId
+      // 下面这种方式，如果是点击删除按钮得到的数据，那么providerId是一个含有多个值的数组，传递到后台也可以匹配参数
+      // js利用|| 或者 && 简便赋值方式
+      const providerId = row.providerId || this.ids
+      // 确认框显示
+      this.$confirm('此操作将永久删除该供应商信息, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 开启遮罩
+        this.loading = true
+        // 调用api执行删除操作
+        deleteProviderByIds(providerId).then(res => {
+          // 关闭遮罩
+          this.loading = false
+          // 操作成功提示
+          this.msgSuccess('删除成功')
+          // 重新查询数据列表
+          this.getProviderList()
+        })
+      }).catch(() => {
+        // 关闭遮罩
+        this.loading = false
+        // 操作失败提示
+        this.msgInfo('取消删除操作')
+      })
+    },
+    // 改变数据列表第一列多选框选中状态所触发的方法,selection为选择的内容
+    handleSelectionChange(selection) {
+      // selection保存着勾选的一条数据，以数组形式存储，对象为一个单位
+      this.single = selection.length === 1
+      this.multiple = selection.length > 1
+      // 保存勾选的数据的id  item表示取出数组中一个数据，然后获取到该条数据的id，遍历完成后，ids拿到所有勾选的id
+      this.ids = selection.map(item => item.providerId)
+    },
+    // 转换字典数据(code值与实际显示值)
+    statusFormatter(row) {
+      return this.transferDictCode(this.statusOptions, row.status)
+    },
+    // 改变每页显示条数的时候触发
+    handleSizeChange(val) {
+      // 更新每页显示条数
+      this.queryParams.pageSize = val
+      // 重新查询
+      this.getProviderList()
+    },
+    // 当前页改变时触发(前一页,点击某一页,下一页,跳转某一页)
+    handleCurrentChange(val) {
+      // 更新需要显示的第几页数
+      this.queryParams.pageNum = val
+      // 重新查询
+      this.getProviderList()
+    },
+    // 模态框  保存按钮
+    /**
+     * 因为新增和修改操作都是打开同一个模态框
+     * 因此点击保存按钮时，需要区分执行的是新增操作还是修改操作
+     *    个人想法：根据this.form.providerId来区分
+     *              如果this.form.providerId不存在那么就是新增，因为providerId会在后台生成
+     *               否则为修改操作
+     */
+    handleSubmit() {
+      // 打开遮罩
+      this.loading = true
+      if (this.form.providerId === undefined) {
+        // 添加操作
+        // 表单前端校验，如果不通过就不会执行后端方法
+        this.$refs['form'].validate((valid) => {
+          if (valid) { // 通过校验
+            // 调用保存字典类型的api，调用引入的api不可以使用this.xxx,因为不是当前页面的方法
+            addProvider(this.form).then(res => {
+              // 显示保存成功的消息,调用全局消息
+              this.msgSuccess('保存成功')
+              // 关闭遮罩
+              this.loading = false
+              // 列表数据重新查询
+              this.getProviderList()
+              // 关闭模态框
+              this.open = false
+            }).catch(() => {
+              // 出现异常的处理方式
+              // 已经通过响应拦截器处理了该类型的异常，并显示了提示信息
+              // 关闭遮罩
+              this.loading = false
+            })
+          } else {
+            this.msgError('数据校验不通过')
+            this.loading = false
+          }
+        })
+      } else {
+        // 修改操作
+        // 表单前端校验，如果不通过就不会执行后端方法
+        this.$refs['form'].validate((valid) => {
+          if (valid) {
+            updateProvider(this.form).then(res => {
+              // 显示修改成功的消息,调用全局消息
+              this.msgSuccess('修改成功')
+              // 关闭遮罩
+              this.loading = false
+              // 列表数据重新查询
+              this.getProviderList()
+              // 关闭模态框
+              this.open = false
+            }).catch(() => {
+              // 出现异常的处理方式
+              // 已经通过响应拦截器处理了该类型的异常，并显示了提示信息
+              // 关闭遮罩
+              this.loading = false
+            })
+          } else {
+            this.msgError('数据校验不通过')
+            this.loading = false
+          }
+        })
+      }
+    },
+    // 模态框  取消按钮
+    cancel() {
+      // 设置open为false,表示关闭模态框
+      this.open = false
+    },
+    // 重置表单
+    reset() {
+      // 设置初始值
+      this.form = {
+        providerId: undefined,
+        providerName: undefined,
+        providerNumber: undefined,
+        contactName: undefined,
+        contactTel: undefined,
+        keywords: undefined,
+        providerAddress: undefined,
+        status: '0' // 默认选中正常状态
+      }
+      // 重置表单,对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
+      this.resetForm('form')
+    }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>

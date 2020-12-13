@@ -222,7 +222,7 @@ export const asyncRoutes = [
       },
       {
         path: 'provider',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/erp/provider/index'),
         name: '/stock/provider',
         meta: { title: '供应商管理', icon: 'list' }
       },
