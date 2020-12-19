@@ -18,7 +18,7 @@ export function doAudit(purchaseId) {
 }
 
 // 作废【根据采购单据id】
-export function doinvalid(purchaseId) {
+export function doInvalid(purchaseId) {
   return request({
     url: '/erp/purchase/doInvalid/' + purchaseId,
     method: 'put'
