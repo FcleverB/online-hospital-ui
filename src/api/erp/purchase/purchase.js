@@ -29,7 +29,7 @@ export function doInvalid(purchaseId) {
 export function listPurchasePendingForPage(query) {
   return request({
     url: '/erp/purchase/listPurchasePendingForPage',
-    method: 'put'
+    method: 'get'
   })
 }
 

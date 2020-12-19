@@ -234,7 +234,7 @@ export const asyncRoutes = [
       },
       {
         path: 'examine',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/erp/purchase/list-audit'),
         name: '/stock/examine',
         meta: { title: '入库审核', icon: 'list' }
       },
