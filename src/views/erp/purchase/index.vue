@@ -78,7 +78,11 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="入库单据id" prop="purchaseId" align="center" />
       <el-table-column label="供应商名称" prop="providerId" width="180" align="center" :formatter="providerFormatter"/>
-      <el-table-column label="采购批发总额" prop="purchaseTradeTotalAmount" align="center"/>
+      <el-table-column label="采购批发总额" prop="purchaseTradeTotalAmount" align="center">
+        <template slot-scope="scope">
+          <span>{{scope.row.purchaseTradeTotalAmount | accurate}}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter"/>
       <el-table-column label="申请人" prop="applyUserName" align="center"/>
       <el-table-column label="入库操作人" prop="storageOptUser" align="center"/>
@@ -119,6 +123,13 @@ import { listPurchaseForPage, doAudit, doInvalid } from '@/api/erp/purchase/purc
 import { selectAllProvider } from '@/api/erp/provider/provider'
 export default {
   name: 'Purchase',
+  // 过滤器   页面渲染数据之前使用
+  filters: {
+    accurate(value) {
+      // 保留两位小数
+      return value.toFixed(2)
+    }
+  },
   data() {
     return {
       // 是否启用遮罩层,请求后台时出现进度条(如果请求响应很快的话,可能看不到)
