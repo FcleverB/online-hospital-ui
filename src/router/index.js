@@ -228,7 +228,7 @@ export const asyncRoutes = [
       },
       {
         path: 'purchase',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/erp/purchase/index'),
         name: '/stock/purchase',
         meta: { title: '采购入库列表', icon: 'list' }
       },
