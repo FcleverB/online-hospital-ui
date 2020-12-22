@@ -54,7 +54,7 @@
     <!--操作栏按钮开始-->
     <el-row :gutter="10" style="margin-bottom: 8px;">
       <el-col :span="1.5">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增采购</el-button>
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleToNewPurchase">新增采购</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="success" icon="el-icon-edit" size="mini" :disabled="!single" @click="handleDoAudit">提交审核</el-button>
@@ -241,9 +241,9 @@ export default {
       // 重新查询
       this.getPurchaseList()
     },
-    // 新增入库单据
-    handleAdd() {
-      //
+    // 新增采购入库
+    handleToNewPurchase() {
+      this.$router.replace('/erp/purchase/newPurchase')
     },
     // 提交审核方法
     handleDoAudit() {

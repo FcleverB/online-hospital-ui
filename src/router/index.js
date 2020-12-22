@@ -386,14 +386,14 @@ export const lastRoute = [
     ]
   },
   {
-    path: '/stock/purchase',
+    path: '/erp/purchase',
     component: Layout,
     hidden: true,
     children: [
       {
-        path: 'insert',
-        component: () => import('@/views/error-page/404'),
-        name: '/stock/purchase/insert',
+        path: 'newPurchase',
+        component: () => import('@/views/erp/purchase/newPurchase'),
+        name: '/erp/purchase/newPurchase',
         meta: { title: '采购入库', icon: 'list' }
       },
       {

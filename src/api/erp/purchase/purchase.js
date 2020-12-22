@@ -56,3 +56,45 @@ export function getPurchaseItemById(purchaseId) {
     method: 'get'
   })
 }
+
+// 生成入库单据id
+export function generatePurchaseId() {
+  return request({
+    url: '/erp/purchase/generatePurchaseId',
+    method: 'get'
+  })
+}
+
+// 暂存入库单据和详情信息
+export function addPurchase(data) {
+  return request({
+    url: '/erp/purchase/addPurchase',
+    method: 'post',
+    params: data
+  })
+}
+
+// 添加入库单据和详情信息并提交审核
+export function addPurchaseToAudit(data) {
+  return request({
+    url: '/erp/purchase/addPurchaseToAudit',
+    method: 'post',
+    params: data
+  })
+}
+
+// 根据入库单据id查询入库单据信息和详情信息
+export function queryPurchaseAndItemByPurchaseId(purchaseId) {
+  return request({
+    url: '/erp/purchase/queryPurchaseAndItemByPurchaseId/' + purchaseId,
+    method: 'get'
+  })
+}
+
+// 入库【根据入库单据id】
+export function doInventory(purchaseId) {
+  return request({
+    url: '/erp/purchase/doInventory/' + purchaseId,
+    method: 'put'
+  })
+}
