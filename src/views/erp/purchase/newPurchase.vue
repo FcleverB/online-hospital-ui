@@ -250,7 +250,8 @@ export default {
         keywords: undefined,
         medicinesType: undefined,
         prescriptionType: undefined
-      }
+      },
+      selectMedicines: [] // 药品模态框中选中的数据
     }
   },
   created() {
@@ -285,6 +286,18 @@ export default {
         this.medicinesTableList = res.data
         this.total = res.total
         this.loading = false
+        this.$nextTick(() => {
+          // 根据详情列表数据，在点击添加药品时，进行数据的反选
+          // 因为关闭添加药品模态框的时候，会清除选中数据
+          // 这时候只需要设置好哪些需要选中即可
+          this.medicinesTableList.filter(r1 => {
+            this.purchaseItemList.filter(r2 => {
+              if (parseInt(r1.medicinesId) === parseInt(r2.medicinesId)) {
+                this.$refs.medicinesTableList.toggleRowSelection(r1, true)
+              }
+            })
+          })
+        })
       })
     },
     // 添加药品模态框
@@ -337,6 +350,37 @@ export default {
     },
     // 改变数据列表第一列多选框选中状态所触发的方法,selection为选择的内容
     handleSelectionChange(selection) {
+      this.selectMedicines = selection
+      this.selectMedicines.filter(m1 => {
+        let flag = false
+        // 判断purchaseItemList里面有没有已选择的ID
+        this.purchaseItemList.filter(purch => {
+          if (m1.medicinesId === purch.medicinesId) {
+            flag = true
+          }
+        })
+        // 如果没有，就加入purchaseItemList
+        if (!flag) {
+          // 放到purchaseItemList对象是selection深度clone
+          this.purchaseItemList.push(JSON.parse(JSON.stringify(m1)))
+        }
+      })
+      // 剔除里面不用的属性，添加需要的属性
+      this.purchaseItemList.filter(m => {
+        this.$delete(m, 'status')
+        this.$delete(m, 'medicinesStockNum')
+        this.$delete(m, 'medicinesStockDangerNum')
+        this.$delete(m, 'createTime')
+        this.$delete(m, 'updateTime')
+        this.$delete(m, 'createBy')
+        this.$delete(m, 'updateBy')
+
+        this.$set(m, 'purchaseNumber', m.purchaseNumber ? m.purchaseNumber : 1)
+        this.$set(m, 'tradePrice', m.tradePrice ? m.tradePrice : 0.00)
+        this.$set(m, 'tradeTotalAmount', m.tradeTotalAmount ? m.tradeTotalAmount : 0.00)
+        this.$set(m, 'batchNumber', m.batchNumber ? m.batchNumber : '')
+        this.$set(m, 'remark', m.remark ? m.remark : '')
+      })
     },
     // 改变每页显示条数的时候触发
     handleSizeChange(val) {
