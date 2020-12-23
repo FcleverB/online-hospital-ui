@@ -13,7 +13,7 @@ export function addDictData(data) {
   return request({
     url: '/system/dict/data/addDictData',
     method: 'post',
-    params: data
+    data: data
   })
 }
 // 更新字典数据

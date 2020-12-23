@@ -47,6 +47,6 @@ export function addDept(data) {
   return request({
     url: '/system/dept/addDept',
     method: 'post',
-    params: data
+    data: data
   })
 }

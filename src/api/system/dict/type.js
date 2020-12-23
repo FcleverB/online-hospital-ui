@@ -20,7 +20,7 @@ export function addDictType(data) {
   return request({
     url: '/system/dict/type/addDictType',
     method: 'post',
-    params: data
+    data: data
   })
 }
 

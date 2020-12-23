@@ -47,7 +47,7 @@ export function addMenu(data) {
   return request({
     url: '/system/menu/addMenu',
     method: 'post',
-    params: data
+    data: data
   })
 }
 

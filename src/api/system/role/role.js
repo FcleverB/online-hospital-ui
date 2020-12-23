@@ -14,7 +14,7 @@ export function addRole(data) {
   return request({
     url: '/system/role/addRole',
     method: 'post',
-    params: data
+    data: data
   })
 }
 

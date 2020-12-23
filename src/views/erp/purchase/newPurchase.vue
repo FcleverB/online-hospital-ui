@@ -403,8 +403,6 @@ export default {
               'purchaseDto': this.form,
               'purchaseItemDtos': this.purchaseItemList
             }
-            // 转成JSON格式,后端使用@RequestBody来接收，因此要转换格式
-            // const jsonObj = JSON.stringify(purcheseObj)
             addPurchaseToAudit(purcheseObj).then(res => {
               this.msgSuccess('提交审核成功')
             }).catch(() => {

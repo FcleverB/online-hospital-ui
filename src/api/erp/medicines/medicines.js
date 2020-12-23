@@ -47,7 +47,7 @@ export function addMedicines(data) {
   return request({
     url: '/erp/medicines/addMedicines',
     method: 'post',
-    params: data
+    data: data
   })
 }
 

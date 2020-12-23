@@ -47,6 +47,6 @@ export function addCheckItem(data) {
   return request({
     url: '/system/checkItem/addCheckItem',
     method: 'post',
-    params: data
+    data: data
   })
 }

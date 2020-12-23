@@ -47,6 +47,6 @@ export function addProducter(data) {
   return request({
     url: '/erp/producter/addProducter',
     method: 'post',
-    params: data
+    data: data
   })
 }

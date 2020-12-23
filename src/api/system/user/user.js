@@ -14,7 +14,7 @@ export function addUser(data) {
   return request({
     url: '/system/user/addUser',
     method: 'post',
-    params: data
+    data: data
   })
 }
 

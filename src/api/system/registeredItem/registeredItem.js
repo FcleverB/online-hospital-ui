@@ -47,7 +47,7 @@ export function addRegisteredItem(data) {
   return request({
     url: '/system/registeredItem/addRegisteredItem',
     method: 'post',
-    params: data
+    data: data
   })
 }
 

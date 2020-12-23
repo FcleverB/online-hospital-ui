@@ -39,6 +39,6 @@ export function addNotice(data) {
   return request({
     url: '/system/notice/addNotice',
     method: 'post',
-    params: data
+    data: data
   })
 }
