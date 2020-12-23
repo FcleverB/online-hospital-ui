@@ -101,7 +101,7 @@
         </el-table-column>
         <el-table-column label="操作" align="center">
           <template slot-scope="scope">
-            <el-button type="danger" size="small" @click="handleDelete(scope.$index,scope.row)">删除</el-button>
+            <el-button type="danger" size="small" :disabled="isSubmit" @click="handleDelete(scope.$index,scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -404,6 +404,7 @@ export default {
               'purchaseItemDtos': this.purchaseItemList
             }
             addPurchaseToAudit(purcheseObj).then(res => {
+              this.isSubmit = true
               this.msgSuccess('提交审核成功')
             }).catch(() => {
               this.msgError('提交审核失败')
