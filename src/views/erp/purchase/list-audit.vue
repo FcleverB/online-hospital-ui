@@ -98,7 +98,7 @@
     <el-dialog
       :title="title"
       :visible.sync="isDetail"
-      width="1000px"
+      width="1100px"
       center
       append-to-body
     >
@@ -109,15 +109,15 @@
           label:列名
           show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
         -->
-        <el-table-column label="详情Id" prop="itemId" width="170px" align="center" />
+        <el-table-column label="详情Id" prop="itemId" width="190px" align="center" />
         <el-table-column label="采购单据Id" prop="purchaseId" width="195px" align="center"/>
         <el-table-column label="采购数量" prop="purchaseNumber" align="center"/>
         <el-table-column label="批发价格" prop="tradePrice" align="center" />
-        <el-table-column label="药品批发金额" prop="tradeTotalAmount" align="center" />
+        <el-table-column label="药品批发金额" prop="tradeTotalAmount" width="110px" align="center" />
         <el-table-column label="批次号" prop="batchNumber" align="center"/>
         <el-table-column label="药品名称" prop="medicinesName" align="center"/>
         <el-table-column label="换算量" prop="conversion" align="center"/>
-        <el-table-column label="单位（g/条）" prop="unit" align="center" />
+        <el-table-column label="单位（g/条）" prop="unit" width="110px" align="center" />
       </el-table>
       <span slot="footer" class="dialog-footer">
         <el-button @click="close">关 闭</el-button>

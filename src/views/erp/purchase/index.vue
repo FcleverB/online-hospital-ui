@@ -63,7 +63,7 @@
         <el-button type="danger" icon="el-icon-delete" size="mini" :disabled="!single" @click="handleDoInvalid">作废</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" icon="el-icon-delete" size="mini" :disabled="!single" @click="handleCommit">提交入库</el-button>
+        <el-button type="success" icon="el-icon-delete" size="mini" :disabled="!single" @click="handledoInventory">提交入库</el-button>
       </el-col>
     </el-row>
     <!--操作栏按钮结束-->
@@ -118,7 +118,7 @@
 
 <script>
 // 引入采购入库相关api
-import { listPurchaseForPage, doAudit, doInvalid } from '@/api/erp/purchase/purchase'
+import { listPurchaseForPage, doAudit, doInvalid, doInventory } from '@/api/erp/purchase/purchase'
 // 引入供应商api
 import { selectAllProvider } from '@/api/erp/provider/provider'
 export default {
@@ -279,7 +279,7 @@ export default {
     },
     // 作废方法
     handleDoInvalid(row) {
-      // 获取要提交审核的入库单据id
+      // 获取要作废的入库单据id
       const purchaseId = this.ids[0]
       // 确认框显示
       this.$confirm('是否确认将单据Id为：' + purchaseId + '的单据进行作废？', '提示', {
@@ -310,8 +310,36 @@ export default {
       })
     },
     // 提交入库
-    handleCommit() {
-      //
+    handledoInventory() {
+      // 获取要提交入库的入库单据id
+      const purchaseId = this.ids[0]
+      // 确认框显示
+      this.$confirm('是否确认将单据Id为：' + purchaseId + '的单据提交入库？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 开启遮罩
+        this.loading = true
+        // 调用api执行删除操作
+        doInventory(purchaseId).then(res => {
+          // 关闭遮罩
+          this.loading = false
+          // 操作成功提示
+          this.msgSuccess('提交入库成功')
+          // 重新查询数据列表
+          this.getPurchaseList()
+        }).catch(() => {
+          this.loading = false
+          // 操作失败提示
+          this.msgError('提交入库失败')
+        })
+      }).catch(() => {
+        // 关闭遮罩
+        this.loading = false
+        // 操作失败提示
+        this.msgInfo('取消提交入库操作')
+      })
     }
   }
 }
