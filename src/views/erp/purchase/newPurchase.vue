@@ -192,6 +192,34 @@
       <!-- 分页控件结束 -->
     </el-dialog>
     <!--药品列表模态框结束-->
+    <!-- 批量设置的弹出层开始 -->
+    <el-dialog
+      :title="titleBatchSet"
+      :visible.sync="batchSetOpen"
+      width="500px"
+      center
+      append-to-body
+    >
+      <el-form ref="batchSetForm" :model="batchSetForm" label-width="100px">
+        <el-form-item label="采购数量" prop="purchaseNumber">
+          <el-input-number v-model="batchSetForm.purchaseNumber" placeholder="请输入采购数量" size="small" />
+        </el-form-item>
+        <el-form-item label="批发价" prop="tradePrice">
+          <el-input-number v-model="batchSetForm.tradePrice" :precision="2" :step="0.1" placeholder="请输入批发价格" size="small" />
+        </el-form-item>
+        <el-form-item label="批次号" prop="batchNumber">
+          <el-input v-model="batchSetForm.batchNumber" placeholder="请输入批次号" size="small" />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="batchSetForm.remark" placeholder="请输入备注" size="small" />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleBatchSetSubmit">确定</el-button>
+        <el-button @click="cancelBatchSet">取消</el-button>
+      </span>
+    </el-dialog>
+    <!-- 批量设置的弹出层结束 -->
   </div>
 </template>
 
@@ -219,10 +247,14 @@ export default {
       loading: false,
       // 是否打开药品的模态框
       openMedicines: false,
+      // 批量设置模态框
+      batchSetOpen: false,
       // 药品模态框标题
       titleMedicines: '',
+      // 批量设置模态框标题
+      titleBatchSet: '',
       // 分页总条数
-      total: '',
+      total: 0,
       // 是否已经提交
       isSubmit: false,
       // 查询条件供应商数据
@@ -250,6 +282,12 @@ export default {
         keywords: undefined,
         medicinesType: undefined,
         prescriptionType: undefined
+      },
+      batchSetForm: {
+        purchaseNumber: 0, // 购买数量
+        tradePrice: 0.00, // 批发价
+        batchNumber: '', // 药品生产批次号
+        remark: '' // 备注
       },
       selectMedicines: [] // 药品模态框中选中的数据
     }
@@ -308,6 +346,8 @@ export default {
     },
     // 批量设置模态框
     handleBatchSet() {
+      this.batchSetOpen = true
+      this.titleBatchSet = '批量设置'
     },
     // 暂存
     handleSubmit() {
@@ -400,6 +440,28 @@ export default {
     closeModal(done) {
       this.resetQuery()
       done()
+    },
+    // 批量设置保存方法
+    handleBatchSetSubmit() {
+      if (this.purchaseItemList.length > 0) {
+        this.purchaseItemList.filter(item => {
+          item.purchaseNumber = this.batchSetForm.purchaseNumber
+          item.tradePrice = this.batchSetForm.tradePrice
+          item.batchNumber = this.batchSetForm.batchNumber
+          item.remark = this.batchSetForm.remark
+        })
+        this.msgInfo('批量设置成功')
+      } else {
+        this.msgInfo('至少添加一个药品才可以进行该操作')
+      }
+      this.batchSetOpen = false
+    },
+    // 批量设置取消方法
+    cancelBatchSet() {
+      // 清空数据
+      this.resetForm('batchSetForm')
+      this.msgInfo('取消批量设置操作')
+      this.batchSetOpen = false
     }
   }
 }
