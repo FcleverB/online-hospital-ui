@@ -63,7 +63,7 @@
         <el-button type="danger" icon="el-icon-delete" size="mini" :disabled="!single" @click="handleDoInvalid">作废</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" icon="el-icon-delete" size="mini" :disabled="!multiple" @click="handleCommit">提交入库</el-button>
+        <el-button type="success" icon="el-icon-delete" size="mini" :disabled="!single" @click="handleCommit">提交入库</el-button>
       </el-col>
     </el-row>
     <!--操作栏按钮结束-->

@@ -12,7 +12,7 @@
     <!--操作栏按钮结束-->
     <!--采购单据表单开始-->
     <el-card class="box-card">
-      <el-form ref="form" :model="form" :inline="true" label-width="90px">
+      <el-form ref="form" :model="form" :inline="true" label-width="90px" :rules="purchaseRules">
         <el-row :gutter="10">
           <el-col :span="1.5">
             <el-form-item label="入库单据号" prop="purchaseId">
@@ -230,7 +230,7 @@ import { selectAllProvider } from '@/api/erp/provider/provider'
 // 引入生产厂家api
 import { selectAllProducter } from '@/api/erp/producter/producter'
 // 引入api
-import { generatePurchaseId } from '@/api/erp/purchase/purchase'
+import { generatePurchaseId, addPurchase, addPurchaseToAudit } from '@/api/erp/purchase/purchase'
 export default {
   name: 'NewPurchase',
   // 过滤器   页面渲染数据之前使用
@@ -288,7 +288,13 @@ export default {
         batchNumber: '', // 药品生产批次号
         remark: '' // 备注
       },
-      selectMedicines: [] // 药品模态框中选中的数据
+      selectMedicines: [], // 药品模态框中选中的数据
+      purchaseRules: {
+        providerId: [
+          // trigger: blur: 一般用于输入框，失去焦点时校验   change：下拉框，选中触发校验判断
+          { required: true, message: '供应商不能为空', trigger: 'change' }
+        ]
+      }
     }
   },
   // 监听purchaseItemList里面的数据变化，更新单个药品批发额和总批发额
@@ -364,9 +370,53 @@ export default {
     },
     // 暂存
     handleSubmit() {
+      this.$refs['form'].validate((valid) => {
+        if (valid) {
+          if (this.purchaseItemList.length > 0) {
+            // 组装要提交到后台的数据
+            const purcheseObj = {
+              'purchaseDto': this.form,
+              'purchaseItemDtos': this.purchaseItemList
+            }
+            // 转成JSON格式,后端使用@RequestBody来接收，因此要转换格式
+            // const jsonObj = JSON.stringify(purcheseObj)
+            addPurchase(purcheseObj).then(res => {
+              this.msgSuccess('暂存成功')
+            }).catch(() => {
+              this.msgError('暂存失败')
+            })
+          } else {
+            this.msgInfo('至少添加一个药品才可以进行该操作')
+          }
+        } else {
+          this.msgError('数据校验不通过')
+        }
+      })
     },
     // 提交审核
     handleSubmitAndAudit() {
+      this.$refs['form'].validate((valid) => {
+        if (valid) {
+          if (this.purchaseItemList.length > 0) {
+            // 组装要提交到后台的数据
+            const purcheseObj = {
+              'purchaseDto': this.form,
+              'purchaseItemDtos': this.purchaseItemList
+            }
+            // 转成JSON格式,后端使用@RequestBody来接收，因此要转换格式
+            // const jsonObj = JSON.stringify(purcheseObj)
+            addPurchaseToAudit(purcheseObj).then(res => {
+              this.msgSuccess('提交审核成功')
+            }).catch(() => {
+              this.msgError('提交审核失败')
+            })
+          } else {
+            this.msgInfo('至少添加一个药品才可以进行该操作')
+          }
+        } else {
+          this.msgError('数据校验不通过')
+        }
+      })
     },
     // 删除一行入库详情数据,当前删除行的索引和行数据
     handleDelete(index, row) {
