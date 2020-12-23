@@ -1,13 +1,13 @@
-<!-- 单据新增页面 -->
+<!-- 单据编辑页面 -->
 <template>
   <div class="app-container">
     <!--操作栏按钮开始-->
     <el-card class="box-card">
       <div style="text-align:right;">
-        <el-button type="primary" icon="el-icon-plus" :disabled="isSubmit" size="small" @click="handleAddMedicines">添加药品</el-button>
-        <el-button type="success" icon="el-icon-s-operation" :disabled="isSubmit" size="small" @click="handleBatchSet">批量设置</el-button>
-        <el-button type="warning" icon="el-icon-check" :disabled="isSubmit" size="small" @click="handleSubmit">暂存</el-button>
-        <el-button type="danger" icon="el-icon-finished" :disabled="isSubmit" size="small" @click="handleSubmitAndAudit">提交审核</el-button>
+        <el-button type="primary" icon="el-icon-plus" :disabled="isView" size="small" @click="handleAddMedicines">添加药品</el-button>
+        <el-button type="success" icon="el-icon-s-operation" :disabled="isView" size="small" @click="handleBatchSet">批量设置</el-button>
+        <el-button type="warning" icon="el-icon-check" :disabled="isView" size="small" @click="handleSubmit">暂存</el-button>
+        <el-button type="danger" icon="el-icon-finished" :disabled="isView" size="small" @click="handleSubmitAndAudit">提交审核</el-button>
       </div>
     </el-card>
     <!--操作栏按钮结束-->
@@ -32,7 +32,7 @@
                 v-model="form.providerId"
                 placeholder="请选择供应商"
                 size="small"
-                :disabled="isSubmit"
+                :disabled="isView"
                 style="width: 220px">
                 <el-option
                   v-for="item in providerOptions"
@@ -77,13 +77,13 @@
         <el-table-column label="生产厂家" align="center" width="200" prop="producterId" :formatter="producterFormatter"></el-table-column>
         <el-table-column label="数量" align="center" width="155" prop="purchaseNumber">
           <template slot-scope="scope">
-           <el-input-number v-model="scope.row.purchaseNumber" size="small" :step="1" :min="1" :disabled="isSubmit"></el-input-number>
+           <el-input-number v-model="scope.row.purchaseNumber" size="small" :step="1" :min="1" :disabled="isView"></el-input-number>
           </template>
         </el-table-column>
         <el-table-column label="单位" align="center" width="80" prop="unit"></el-table-column>
         <el-table-column label="批发价" align="center" width="155" prop="tradePrice">
           <template slot-scope="scope">
-            <el-input-number v-model="scope.row.tradePrice" size="small" :step="0.1" :min="0.1" :precision="2" :disabled="isSubmit"></el-input-number>
+            <el-input-number v-model="scope.row.tradePrice" size="small" :step="0.1" :min="0.1" :precision="2" :disabled="isView"></el-input-number>
           </template>
         </el-table-column>
         <el-table-column label="批发额" align="center" width="80" prop="tradeTotalAmount">
@@ -93,17 +93,17 @@
         </el-table-column>
         <el-table-column label="药品生产批次号" align="center" width="180" prop="batchNumber">
           <template slot-scope="scope">
-            <el-input v-model="scope.row.batchNumber" size="small" :disabled="isSubmit"></el-input>
+            <el-input v-model="scope.row.batchNumber" size="small" :disabled="isView"></el-input>
           </template>
         </el-table-column>
         <el-table-column label="备注" align="center" width="180" prop="remark">
           <template slot-scope="scope">
-            <el-input v-model="scope.row.remark" size="small" :disabled="isSubmit"></el-input>
+            <el-input v-model="scope.row.remark" size="small" :disabled="isView"></el-input>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center">
           <template slot-scope="scope">
-            <el-button type="danger" size="small" :disabled="isSubmit" @click="handleDelete(scope.$index,scope.row)">删除</el-button>
+            <el-button type="danger" size="small" :disabled="isView" @click="handleDelete(scope.$index,scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -232,7 +232,7 @@ import { selectAllProvider } from '@/api/erp/provider/provider'
 // 引入生产厂家api
 import { selectAllProducter } from '@/api/erp/producter/producter'
 // 引入api
-import { generatePurchaseId, addPurchase, addPurchaseToAudit } from '@/api/erp/purchase/purchase'
+import { generatePurchaseId, addPurchase, addPurchaseToAudit, queryPurchaseAndItemByPurchaseId } from '@/api/erp/purchase/purchase'
 export default {
   name: 'NewPurchase',
   // 过滤器   页面渲染数据之前使用
@@ -256,8 +256,8 @@ export default {
       titleBatchSet: '',
       // 分页总条数
       total: 0,
-      // 是否已经提交
-      isSubmit: false,
+      // 是否已经可以触发按钮
+      isView: true,
       // 查询条件供应商数据
       providerOptions: [],
       // 详情列表生产厂家数据
@@ -314,9 +314,19 @@ export default {
     }
   },
   created() {
-    // 调用后台生成单据号
-    generatePurchaseId().then(res => {
-      this.form.purchaseId = res.msg
+    // 修改页面，获取路由传递的单据id
+    // 判断是否传递参数是否为空，不为空则取出入库单据id
+    const purchaseId = this.$route.params && this.$route.params.purchaseId
+    // 根据单据号查询入库单据信息和详情信息
+    queryPurchaseAndItemByPurchaseId(purchaseId).then(res => {
+      this.form = res.data.purchase
+      // 转换Int类型，然后下拉框能自动转换码值
+      this.form.providerId = parseInt(this.form.providerId)
+      this.purchaseItemList = res.data.purchaseItems
+      // 如果单据状态是未提交1和审核不通过4，上面的按钮才可以进行点击
+      if (res.data.purchase.status === '1' || res.data.purchase.status === '4') {
+        this.isView = false
+      }
     })
     // 查询供应商数据，并填充在下拉列表中
     selectAllProvider().then(res => {
@@ -406,7 +416,7 @@ export default {
               'purchaseItemDtos': this.purchaseItemList
             }
             addPurchaseToAudit(purcheseObj).then(res => {
-              this.isSubmit = true
+              this.isView = true
               this.msgSuccess('提交审核成功')
             }).catch(() => {
               this.msgError('提交审核失败')
@@ -459,7 +469,7 @@ export default {
         let flag = false
         // 判断purchaseItemList里面有没有已选择的ID
         this.purchaseItemList.filter(purch => {
-          if (m1.medicinesId === purch.medicinesId) {
+          if (parseInt(m1.medicinesId) === parseInt(purch.medicinesId)) {
             flag = true
           }
         })

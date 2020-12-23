@@ -394,13 +394,13 @@ export const lastRoute = [
         path: 'newPurchase',
         component: () => import('@/views/erp/purchase/newPurchase'),
         name: '/erp/purchase/newPurchase',
-        meta: { title: '采购入库', icon: 'list' }
+        meta: { title: '新增采购入库', icon: 'list' }
       },
       {
-        path: 'update/:purchaseId',
-        component: () => import('@/views/error-page/404'),
-        name: '/stock/purchase/update',
-        meta: { title: '采购入库修改', icon: 'list' }
+        path: 'editPurchase/:purchaseId', // purchaseId表示路径中传递了参数
+        component: () => import('@/views/erp/purchase/editPurchase'),
+        name: '/erp/purchase/editPurchase',
+        meta: { title: '修改采购入库', icon: 'list' }
       }
     ]
   },

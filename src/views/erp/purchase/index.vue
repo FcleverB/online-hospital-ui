@@ -1,4 +1,3 @@
-<!--字典类型页面-->
 <template>
   <div class="app-container">
     <!--查询条件开始-->
@@ -76,7 +75,13 @@
         show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
       -->
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="入库单据id" prop="purchaseId" align="center" />
+      <el-table-column label="入库单据id" prop="purchaseId" align="center">
+        <template slot-scope="scope">
+          <router-link :to="'/erp/purchase/editPurchase/'+ scope.row.purchaseId" class="link-type">
+            <span>{{scope.row.purchaseId}}</span>
+          </router-link>
+        </template>
+      </el-table-column>
       <el-table-column label="供应商名称" prop="providerId" width="180" align="center" :formatter="providerFormatter"/>
       <el-table-column label="采购批发总额" prop="purchaseTradeTotalAmount" align="center">
         <template slot-scope="scope">
