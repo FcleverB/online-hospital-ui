@@ -45,7 +45,6 @@
             <el-form-item label="总批发金额" prop="purchaseTradeTotalAmount">
               <el-input
                 v-model="form.purchaseTradeTotalAmount"
-                placeholder="请输入总批发金额"
                 :disabled="true"
                 size="small"
                 style="width:220px">
@@ -284,12 +283,26 @@ export default {
         prescriptionType: undefined
       },
       batchSetForm: {
-        purchaseNumber: 0, // 购买数量
-        tradePrice: 0.00, // 批发价
+        purchaseNumber: 1, // 购买数量
+        tradePrice: 0.10, // 批发价
         batchNumber: '', // 药品生产批次号
         remark: '' // 备注
       },
       selectMedicines: [] // 药品模态框中选中的数据
+    }
+  },
+  // 监听purchaseItemList里面的数据变化，更新单个药品批发额和总批发额
+  watch: {
+    purchaseItemList: {
+      handler: function() {
+        this.form.purchaseTradeTotalAmount = 0.00
+        this.purchaseItemList.filter(item => {
+          item.tradeTotalAmount = item.tradePrice * item.purchaseNumber
+          this.form.purchaseTradeTotalAmount += item.tradeTotalAmount
+        })
+      },
+      // 深度监听，监听对象内部数据发生变化时，也会调用
+      deep: true
     }
   },
   created() {
@@ -406,6 +419,7 @@ export default {
         }
       })
       // 剔除里面不用的属性，添加需要的属性
+      // 因为药品表里面的字段并非都是保存到入库单据详情表中，因此多余字段进行剔除
       this.purchaseItemList.filter(m => {
         this.$delete(m, 'status')
         this.$delete(m, 'medicinesStockNum')
@@ -415,6 +429,7 @@ export default {
         this.$delete(m, 'createBy')
         this.$delete(m, 'updateBy')
 
+        // 会判断原先这些属性是否存在值，如果存在就保留，不存在就设置默认值
         this.$set(m, 'purchaseNumber', m.purchaseNumber ? m.purchaseNumber : 1)
         this.$set(m, 'tradePrice', m.tradePrice ? m.tradePrice : 0.00)
         this.$set(m, 'tradeTotalAmount', m.tradeTotalAmount ? m.tradeTotalAmount : 0.00)
@@ -450,10 +465,12 @@ export default {
           item.batchNumber = this.batchSetForm.batchNumber
           item.remark = this.batchSetForm.remark
         })
-        this.msgInfo('批量设置成功')
+        this.msgSuccess('批量设置成功')
       } else {
         this.msgInfo('至少添加一个药品才可以进行该操作')
       }
+      // 清空数据
+      this.resetForm('batchSetForm')
       this.batchSetOpen = false
     },
     // 批量设置取消方法
