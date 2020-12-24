@@ -240,7 +240,7 @@ export const asyncRoutes = [
       },
       {
         path: 'inventory',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/erp/inventoryLog/index'),
         name: '/stock/inventory',
         meta: { title: '库存查询', icon: 'list' }
       }
