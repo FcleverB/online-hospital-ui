@@ -70,3 +70,11 @@ export function saveUserAndRole(userId, roleIds) {
     method: 'post'
   })
 }
+
+// 查询可以排班的用户信息（医生）
+export function selectNeedSchedulingUsers() {
+  return request({
+    url: '/system/user/selectAllUser',
+    method: 'get'
+  })
+}
