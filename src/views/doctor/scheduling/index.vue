@@ -60,7 +60,7 @@
     <!--排班列表开始-->
     <el-table v-loading="loading" :data="tableData" border :span-method="spanMethod">
       <el-table-column prop="userId" label="医生Id" align="center" :formatter="userFormatter"></el-table-column>
-      <el-table-column prop="deptId" label="科室Id" align="center" :formatter="deptFormatter"></el-table-column>
+      <el-table-column prop="deptId" label="科室Id" align="center" width="80px" :formatter="deptFormatter"></el-table-column>
       <el-table-column prop="subsectionType" label="时间/日期" align="center" :formatter="subsectionTypeFormatter"></el-table-column>
       <el-table-column prop="schedulingType[0]" :label="labelNames[0]" align="center" :formatter="schedulingTypeDay1Formatter"></el-table-column>
       <el-table-column prop="schedulingType[1]" :label="labelNames[1]" align="center" :formatter="schedulingTypeDay2Formatter"></el-table-column>
@@ -78,6 +78,118 @@
       </el-table-column>
     </el-table>
     <!--排班列表结束-->
+    <!--编辑排班信息模态框开始-->
+    <!--dialog:对话框
+      title:模态框标题
+      visible.sync:表示是否显示
+      center:居中
+      append-to-body:如果需要在一个对话框内部嵌套另一个对话框，需要使用append-to-body属性
+    -->
+    <el-dialog
+      :title="title"
+      :visible.sync="open"
+      width="1200px"
+      center
+      append-to-body
+    >
+      <el-table v-loading="loading" :data="editTableData" border>
+        <el-table-column prop="subsectionType" label="时间/日期" align="center" :formatter="subsectionTypeFormatter"></el-table-column>
+        <el-table-column prop="schedulingType[0]" :label="labelNames[0]" align="center">
+          <template slot-scope="scope">
+            <el-select
+              v-model="scope.row.schedulingType[0]"
+              placeholder="请选择排班类型"
+              clearable
+              size="small"
+            >
+              <el-option
+                v-for="dict in schedulingTypeOptions"
+                :key="dict.dictValue"
+                :label="dict.dictLabel"
+                :value="dict.dictValue"
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="schedulingType[1]" :label="labelNames[1]" align="center">
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.schedulingType[1]">
+              <el-option
+                v-for="dict in schedulingTypeOptions"
+                :key="dict.dictValue"
+                :label="dict.dictLabel"
+                :value="dict.dictValue"
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="schedulingType[2]" :label="labelNames[2]" align="center">
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.schedulingType[2]">
+              <el-option
+                v-for="dict in schedulingTypeOptions"
+                :key="dict.dictValue"
+                :label="dict.dictLabel"
+                :value="dict.dictValue"
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="schedulingType[3]" :label="labelNames[3]" align="center">
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.schedulingType[3]">
+              <el-option
+                v-for="dict in schedulingTypeOptions"
+                :key="dict.dictValue"
+                :label="dict.dictLabel"
+                :value="dict.dictValue"
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="schedulingType[4]" :label="labelNames[4]" align="center">
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.schedulingType[4]">
+              <el-option
+                v-for="dict in schedulingTypeOptions"
+                :key="dict.dictValue"
+                :label="dict.dictLabel"
+                :value="dict.dictValue"
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="schedulingType[5]" :label="labelNames[5]" align="center">
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.schedulingType[5]">
+              <el-option
+                v-for="dict in schedulingTypeOptions"
+                :key="dict.dictValue"
+                :label="dict.dictLabel"
+                :value="dict.dictValue"
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="schedulingType[6]" :label="labelNames[6]" align="center">
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.schedulingType[6]">
+              <el-option
+                v-for="dict in schedulingTypeOptions"
+                :key="dict.dictValue"
+                :label="dict.dictLabel"
+                :value="dict.dictValue"
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+      </el-table>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleSubmit">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </span>
+    </el-dialog>
+    <!--编辑排班信息模态框结束-->
   </div>
 </template>
 
@@ -136,7 +248,13 @@ export default {
       // 排班列表中时段码表
       subsectionTypeOptions: [],
       // 排班类型码表
-      schedulingTypeOptions: []
+      schedulingTypeOptions: [],
+      // 模态框是否显示
+      open: false,
+      // 模态框的标题内容
+      title: '',
+      // 模态框中的表格数据
+      editTableData: []
     }
   },
   computed: {
@@ -233,11 +351,22 @@ export default {
     },
     // 编辑
     handleEdit(userId) {
-      // 编辑操作
-    },
-    // 合并单元格代码
-    merge() {
-      //
+      // 清空原有模态框列表数据
+      this.editTableData = []
+      // 获取当前医生名称
+      let doctorName = ''
+      // 遍历用户数组，根据userId进行匹配
+      this.userOptions.filter(item => {
+        if (parseInt(item.userId) === parseInt(userId)) {
+          doctorName = item.userName
+        }
+      })
+      // 设置模态框标题
+      this.title = '修改【' + doctorName + '】排班信息'
+      // 打开
+      this.open = true
+      // 设置模态框中显示的数据
+      this.editTableData = this.tableData.filter(o => o.userId === userId)
     },
     // 合并的代码
     spanMethod(data) { // 对于表格数据进行分组合并操作，UI组件回调函数
@@ -279,6 +408,19 @@ export default {
         len += this.userGroup(tmp[i])
       }
       return len
+    },
+    // 模态框保存确定按钮
+    handleSubmit() {
+      this.loading = true
+      this.msgSuccess('确定模态框')
+      this.loading = false
+    },
+    // 模态框取消按钮
+    cancel() {
+      // 关闭模态框
+      this.open = false
+      // 打开模态框的时候进行了数据的清楚，关闭模态框的时候就不需要清除数据了
+      this.msgSuccess('关闭模态框')
     }
   }
 }
