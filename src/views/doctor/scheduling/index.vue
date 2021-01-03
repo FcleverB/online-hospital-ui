@@ -58,8 +58,25 @@
     </el-card>
     <!--当前所选排班日期范围结束-->
     <!--排班列表开始-->
-    <el-card class="box-card">
-    </el-card>
+    <el-table v-loading="loading" :data="tableData" border :span-method="spanMethod">
+      <el-table-column prop="userId" label="医生Id" align="center" :formatter="userFormatter"></el-table-column>
+      <el-table-column prop="deptId" label="科室Id" align="center" :formatter="deptFormatter"></el-table-column>
+      <el-table-column prop="subsectionType" label="时间/日期" align="center" :formatter="subsectionTypeFormatter"></el-table-column>
+      <el-table-column prop="schedulingType[0]" :label="labelNames[0]" align="center" :formatter="schedulingTypeDay1Formatter"></el-table-column>
+      <el-table-column prop="schedulingType[1]" :label="labelNames[1]" align="center" :formatter="schedulingTypeDay2Formatter"></el-table-column>
+      <el-table-column prop="schedulingType[2]" :label="labelNames[2]" align="center" :formatter="schedulingTypeDay3Formatter"></el-table-column>
+      <el-table-column prop="schedulingType[3]" :label="labelNames[3]" align="center" :formatter="schedulingTypeDay4Formatter"></el-table-column>
+      <el-table-column prop="schedulingType[4]" :label="labelNames[4]" align="center" :formatter="schedulingTypeDay5Formatter"></el-table-column>
+      <el-table-column prop="schedulingType[5]" :label="labelNames[5]" align="center" :formatter="schedulingTypeDay6Formatter"></el-table-column>
+      <el-table-column prop="schedulingType[6]" :label="labelNames[6]" align="center" :formatter="schedulingTypeDay7Formatter"></el-table-column>
+      <el-table-column label="操作" align="center">
+        <!--slot-scope="scope" 取到当前单元格-->
+        <template slot-scope="scope">
+          <!--传递该条数据到具体处理方法中-->
+          <el-button type="text" icon="el-icon-edit" size="mini" @click="handleEdit(scope.row.userId)">编辑</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
     <!--排班列表结束-->
   </div>
 </template>
@@ -68,6 +85,8 @@
 // 引入科室api
 import { selectAllDept } from '@/api/system/dept/dept'
 import { selectNeedSchedulingUsers } from '@/api/system/user/user'
+import { getDataByType } from '@/api/system/dict/data'
+import { transferDictCode } from '@/utils/hospital-uitls'
 // 引入用户api
 export default {
   name: 'Scheduling',
@@ -87,7 +106,43 @@ export default {
       schedulingDate: {
         startTimeWeek: '2020-12-21(周一)',
         endTimeWeek: '2020-12-27(周日)'
-      }
+      },
+      // 测试数据  医生和科室信息mock数据，该数据假设已经按部门信息进行排序
+      tableData: [
+        { userId: 2, deptId: 101, subsectionType: '1', schedulingType: ['1', '1', '1', '1', '2', '1', '2'] },
+        { userId: 2, deptId: 101, subsectionType: '2', schedulingType: ['1', '2', '1', '1', '1', '1', '1'] },
+        { userId: 2, deptId: 101, subsectionType: '3', schedulingType: ['1', '1', '1', '1', '2', '1', '1'] },
+        { userId: 3, deptId: 102, subsectionType: '1', schedulingType: ['1', '1', '2', '1', '', '1', '1'] },
+        { userId: 3, deptId: 102, subsectionType: '2', schedulingType: ['1', '1', '1', '1', '1', '1', '1'] },
+        { userId: 3, deptId: 102, subsectionType: '3', schedulingType: ['1', '1', '1', '1', '1', '1', '1'] },
+        { userId: 4, deptId: 103, subsectionType: '1', schedulingType: ['1', '1', '1', '', '1', '1', '2'] },
+        { userId: 4, deptId: 103, subsectionType: '2', schedulingType: ['1', '1', '1', '1', '1', '2', '1'] },
+        { userId: 4, deptId: 103, subsectionType: '3', schedulingType: ['1', '1', '1', '1', '1', '1', '1'] },
+        { userId: 5, deptId: 104, subsectionType: '1', schedulingType: ['1', '2', '1', '1', '1', '1', '1'] },
+        { userId: 5, deptId: 104, subsectionType: '2', schedulingType: ['1', '1', '1', '1', '1', '1', '1'] },
+        { userId: 5, deptId: 104, subsectionType: '3', schedulingType: ['', '1', '1', '1', '1', '1', '1'] }
+      ],
+      labelNames: [
+        '2020-12-21(周一)',
+        '2020-12-22(周二)',
+        '2020-12-23(周三)',
+        '2020-12-24(周四)',
+        '2020-12-25(周五)',
+        '2020-12-26(周六)',
+        '2020-12-27(周日)'
+      ],
+      // 遮罩层
+      loading: false,
+      // 排班列表中时段码表
+      subsectionTypeOptions: [],
+      // 排班类型码表
+      schedulingTypeOptions: []
+    }
+  },
+  computed: {
+    groupNum() {
+      // 获取医生列表数组
+      return new Set(this.tableData.map(o => o.userId))
     }
   },
   created() {
@@ -98,6 +153,14 @@ export default {
     // 查询所有医生信息（实际用户就是医生）
     selectNeedSchedulingUsers().then(res => {
       this.userOptions = res.data
+    })
+    // 码表 排班时段
+    getDataByType('his_subsection_type').then(res => {
+      this.subsectionTypeOptions = res.data
+    })
+    // 码表 排班类型
+    getDataByType('his_scheduling_type').then(res => {
+      this.schedulingTypeOptions = res.data
     })
   },
   methods: {
@@ -115,6 +178,107 @@ export default {
     },
     // 下一周
     nextWeek() {
+    },
+    // 翻译医生id（实际为用户id）
+    userFormatter(row) {
+      let userName = ''
+      this.userOptions.filter(item => {
+        if (parseInt(row.userId) === parseInt(item.userId)) {
+          userName = item.userName
+        }
+      })
+      return userName
+    },
+    // 翻译科室
+    deptFormatter(row) {
+      let deptName = ''
+      this.deptNameOptions.filter(item => {
+        if (parseInt(row.deptId) === parseInt(item.deptId)) {
+          deptName = item.deptName
+        }
+      })
+      return deptName
+    },
+    // 翻译排班时段
+    subsectionTypeFormatter(row) {
+      return transferDictCode(this.subsectionTypeOptions, row.subsectionType)
+    },
+    // 翻译排班类型（周一）
+    schedulingTypeDay1Formatter(row) {
+      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[0])
+    },
+    // 翻译排班类型（周二）
+    schedulingTypeDay2Formatter(row) {
+      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[1])
+    },
+    // 翻译排班类型（周三）
+    schedulingTypeDay3Formatter(row) {
+      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[2])
+    },
+    // 翻译排班类型（周四）
+    schedulingTypeDay4Formatter(row) {
+      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[3])
+    },
+    // 翻译排班类型（周五）
+    schedulingTypeDay5Formatter(row) {
+      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[4])
+    },
+    // 翻译排班类型（周六）
+    schedulingTypeDay6Formatter(row) {
+      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[5])
+    },
+    // 翻译排班类型（周日）
+    schedulingTypeDay7Formatter(row) {
+      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[6])
+    },
+    // 编辑
+    handleEdit(userId) {
+      // 编辑操作
+    },
+    // 合并单元格代码
+    merge() {
+      //
+    },
+    // 合并的代码
+    spanMethod(data) { // 对于表格数据进行分组合并操作，UI组件回调函数
+      const { row, rowIndex, columnIndex } = data
+      // 行和列的索引从0开始计数
+      if (columnIndex < 2 || columnIndex > 9) { // 医生合并展示区
+        const len = this.userGroup(row.userId)
+        const lenName = this.userIdLen(row.userId)
+        if (rowIndex === lenName) { // 某医生首位部门行
+          return {
+            rowspan: len,
+            colspan: 1
+          }
+        } else {
+          return { // 某医生非首位部门行
+            rowspan: 0,
+            colspan: 0
+          }
+        }
+      } else { // 排班信息展示区
+        return {
+          rowspan: 1,
+          colspan: 1
+        }
+      }
+    },
+    userGroup(userId) {
+      // 查找指定用户id（医生id）在列表数据中的个数，这里需要存储排班数据的时候，需要将某个医生上午下午晚上的排班数据按userId升序（或者降序）排序，然后按照subsectionType升序排序放好
+      return this.tableData.filter(o => {
+        return o.userId === userId
+      }).length
+      // return this.tableData.filter(o => o.userId === name).length
+    },
+    userIdLen(userId) { // 根据医生名称获取该医生第一个部门在全量部门中的偏移位置
+      const tmp = Array.from(this.groupNum)
+      const index = tmp.indexOf(userId) // 某医生在全医生中的偏移位置
+      let len = 0
+      for (let i = 0; i < index; i++) {
+        len += this.userGroup(tmp[i])
+      }
+      return len
     }
   }
 }
