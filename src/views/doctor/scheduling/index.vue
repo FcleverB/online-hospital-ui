@@ -196,9 +196,8 @@
 <script>
 // 引入科室api
 import { selectAllDept } from '@/api/system/dept/dept'
-import { selectNeedSchedulingUsers } from '@/api/system/user/user'
-import { getDataByType } from '@/api/system/dict/data'
-import { transferDictCode } from '@/utils/hospital-uitls'
+import { queryUsersNeedScheduling, queryScheduling, saveScheduling } from '@/api/doctor/scheduling'
+
 // 引入用户api
 export default {
   name: 'Scheduling',
@@ -268,34 +267,60 @@ export default {
     selectAllDept().then(res => {
       this.deptNameOptions = res.data
     })
-    // 查询所有医生信息（实际用户就是医生）
-    selectNeedSchedulingUsers().then(res => {
+    // 查询所有可以排班医生信息（实际用户就是医生）,可以传递科室id,查询指定科室的医生列表
+    queryUsersNeedScheduling().then(res => {
       this.userOptions = res.data
     })
     // 码表 排班时段
-    getDataByType('his_subsection_type').then(res => {
+    this.getDataByType('his_subsection_type').then(res => {
       this.subsectionTypeOptions = res.data
     })
     // 码表 排班类型
-    getDataByType('his_scheduling_type').then(res => {
+    this.getDataByType('his_scheduling_type').then(res => {
       this.schedulingTypeOptions = res.data
     })
+    // 查询排班数据  返回值填充到schedulingData tableData labelNames
+    this.listScheduling()
   },
   methods: {
+    // 查询排班数据
+    listScheduling() {
+      this.loading = true
+      // 调用api
+      queryScheduling(this.queryParams).then(res => {
+        this.tableData = res.data.tableData
+        this.schedulingDate = res.data.schedulingDate
+        this.labelNames = res.data.labelNames
+        this.loading = false
+      })
+    },
     // 查询操作
     handleQuery() {
+      this.listScheduling()
     },
     // 清空查询条件操作
     resetQuery() {
+      // 清空表单
+      this.resetForm('queryForm')
+      this.listScheduling()
     },
     // 上一周
     beforeWeek() {
+      // 将当前周的第一天传递过去，减少一天就可以是上一周了
+      this.queryParams.queryDate = this.schedulingDate.startTimeWeek
+      this.listScheduling()
     },
     // 当前周
     currentWeek() {
+      // 后端会自动获取到当前时间
+      this.queryParams.queryDate = undefined
+      this.listScheduling()
     },
     // 下一周
     nextWeek() {
+      // 将当前周的最后一天传递过去，增加一天就可以是下一周了
+      this.queryParams.queryDate = this.schedulingDate.endTimeWeek
+      this.listScheduling()
     },
     // 翻译医生id（实际为用户id）
     userFormatter(row) {
@@ -319,35 +344,35 @@ export default {
     },
     // 翻译排班时段
     subsectionTypeFormatter(row) {
-      return transferDictCode(this.subsectionTypeOptions, row.subsectionType)
+      return this.transferDictCode(this.subsectionTypeOptions, row.subsectionType)
     },
     // 翻译排班类型（周一）
     schedulingTypeDay1Formatter(row) {
-      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[0])
+      return this.transferDictCode(this.schedulingTypeOptions, row.schedulingType[0])
     },
     // 翻译排班类型（周二）
     schedulingTypeDay2Formatter(row) {
-      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[1])
+      return this.transferDictCode(this.schedulingTypeOptions, row.schedulingType[1])
     },
     // 翻译排班类型（周三）
     schedulingTypeDay3Formatter(row) {
-      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[2])
+      return this.transferDictCode(this.schedulingTypeOptions, row.schedulingType[2])
     },
     // 翻译排班类型（周四）
     schedulingTypeDay4Formatter(row) {
-      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[3])
+      return this.transferDictCode(this.schedulingTypeOptions, row.schedulingType[3])
     },
     // 翻译排班类型（周五）
     schedulingTypeDay5Formatter(row) {
-      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[4])
+      return this.transferDictCode(this.schedulingTypeOptions, row.schedulingType[4])
     },
     // 翻译排班类型（周六）
     schedulingTypeDay6Formatter(row) {
-      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[5])
+      return this.transferDictCode(this.schedulingTypeOptions, row.schedulingType[5])
     },
     // 翻译排班类型（周日）
     schedulingTypeDay7Formatter(row) {
-      return transferDictCode(this.schedulingTypeOptions, row.schedulingType[6])
+      return this.transferDictCode(this.schedulingTypeOptions, row.schedulingType[6])
     },
     // 编辑
     handleEdit(userId) {
@@ -411,9 +436,22 @@ export default {
     },
     // 模态框保存确定按钮
     handleSubmit() {
+      // 构造要保存的数据
+      const form = {
+        beginDate: this.schedulingDate.startTimeWeek, // 当前周的开始时间
+        data: this.editTableData // 当前周的数据
+      }
       this.loading = true
-      this.msgSuccess('确定模态框')
-      this.loading = false
+      // 调用api保存
+      saveScheduling(form).then(res => {
+        this.listScheduling() // 重新加载
+        this.loading = false
+        this.open = false
+        this.msgSuccess('保存成功')
+      }).catch(() => {
+        this.loading = false
+        this.msgError('保存失败')
+      })
     },
     // 模态框取消按钮
     cancel() {
