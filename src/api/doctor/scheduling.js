@@ -24,3 +24,12 @@ export function saveScheduling(data) {
     data: data
   })
 }
+
+// 查询我的排班信息
+export function queryMyScheduling(query) {
+  return request({
+    url: '/doctor/scheduling/queryMyScheduling',
+    method: 'get',
+    params: query
+  })
+}

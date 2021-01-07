@@ -351,13 +351,13 @@ export const asyncRoutes = [
       },
       {
         path: 'myscheduling',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/doctor/scheduling/myScheduling'),
         name: '/doctor/myscheduling',
         meta: { title: '我的排班', icon: 'list' }
       },
       {
         path: 'scheduling',
-        component: () => import('@/views/doctor/scheduling'),
+        component: () => import('@/views/doctor/scheduling/index'),
         name: '/doctor/scheduling',
         meta: { title: '医生排班', icon: 'list' }
       },
