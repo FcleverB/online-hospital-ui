@@ -44,7 +44,7 @@
         <!--选择的周数 上一周 当前周 下一周-->
         <el-form-item style="float: right">
           <el-button type="success" icon="el-icon-back" size="mini" @click="beforeWeek">上一周</el-button>
-          <el-button type="success" icon="el-icon-s-operation" size="mini" @click="currentWeek">当前周</el-button>
+          <el-button type="primary" icon="el-icon-s-operation" size="mini" @click="currentWeek">当前周</el-button>
           <el-button type="success" icon="el-icon-right" size="mini" @click="nextWeek">下一周</el-button>
         </el-form-item>
       </el-form>
@@ -450,7 +450,7 @@ export default {
       // 构造要保存的数据
       const form = {
         beginDate: this.schedulingDate.startTimeWeek, // 当前周的开始时间
-        data: this.editTableData // 当前周的数据
+        data: this.editTableData // 当前周的数据（对应用户）
       }
       this.loading = true
       // 调用api保存
@@ -469,7 +469,7 @@ export default {
       // 关闭模态框
       this.open = false
       // 打开模态框的时候进行了数据的清楚，关闭模态框的时候就不需要清除数据了
-      this.msgSuccess('关闭模态框')
+      this.msgInfo('取消编辑操作')
     }
   }
 }
