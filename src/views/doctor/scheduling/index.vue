@@ -53,7 +53,7 @@
     <!--当前所选排班日期范围开始-->
     <el-card class="box-card">
       <div style="text-align: center">
-        <span>{{schedulingDate.startTimeWeek}}</span>--<span>{{schedulingDate.endTimeWeek}}</span>
+        <span>{{schedulingDate.startTimeWeek}}(周一)</span>--<span>{{schedulingDate.endTimeWeek}}(周日)</span>
       </div>
     </el-card>
     <!--当前所选排班日期范围结束-->
@@ -113,7 +113,12 @@
         </el-table-column>
         <el-table-column prop="schedulingType[1]" :label="labelNames[1]" align="center">
           <template slot-scope="scope">
-            <el-select v-model="scope.row.schedulingType[1]">
+            <el-select
+              v-model="scope.row.schedulingType[1]"
+              placeholder="请选择排班类型"
+              clearable
+              size="small"
+            >
               <el-option
                 v-for="dict in schedulingTypeOptions"
                 :key="dict.dictValue"
@@ -125,7 +130,12 @@
         </el-table-column>
         <el-table-column prop="schedulingType[2]" :label="labelNames[2]" align="center">
           <template slot-scope="scope">
-            <el-select v-model="scope.row.schedulingType[2]">
+            <el-select
+              v-model="scope.row.schedulingType[2]"
+              placeholder="请选择排班类型"
+              clearable
+              size="small"
+            >
               <el-option
                 v-for="dict in schedulingTypeOptions"
                 :key="dict.dictValue"
@@ -137,7 +147,12 @@
         </el-table-column>
         <el-table-column prop="schedulingType[3]" :label="labelNames[3]" align="center">
           <template slot-scope="scope">
-            <el-select v-model="scope.row.schedulingType[3]">
+            <el-select
+              v-model="scope.row.schedulingType[3]"
+              placeholder="请选择排班类型"
+              clearable
+              size="small"
+            >
               <el-option
                 v-for="dict in schedulingTypeOptions"
                 :key="dict.dictValue"
@@ -149,7 +164,12 @@
         </el-table-column>
         <el-table-column prop="schedulingType[4]" :label="labelNames[4]" align="center">
           <template slot-scope="scope">
-            <el-select v-model="scope.row.schedulingType[4]">
+            <el-select
+              v-model="scope.row.schedulingType[4]"
+              placeholder="请选择排班类型"
+              clearable
+              size="small"
+            >
               <el-option
                 v-for="dict in schedulingTypeOptions"
                 :key="dict.dictValue"
@@ -161,7 +181,12 @@
         </el-table-column>
         <el-table-column prop="schedulingType[5]" :label="labelNames[5]" align="center">
           <template slot-scope="scope">
-            <el-select v-model="scope.row.schedulingType[5]">
+            <el-select
+              v-model="scope.row.schedulingType[5]"
+              placeholder="请选择排班类型"
+              clearable
+              size="small"
+            >
               <el-option
                 v-for="dict in schedulingTypeOptions"
                 :key="dict.dictValue"
@@ -173,7 +198,12 @@
         </el-table-column>
         <el-table-column prop="schedulingType[6]" :label="labelNames[6]" align="center">
           <template slot-scope="scope">
-            <el-select v-model="scope.row.schedulingType[6]">
+            <el-select
+              v-model="scope.row.schedulingType[6]"
+              placeholder="请选择排班类型"
+              clearable
+              size="small"
+            >
               <el-option
                 v-for="dict in schedulingTypeOptions"
                 :key="dict.dictValue"
@@ -215,33 +245,14 @@ export default {
       },
       // 当前周的时间范围
       schedulingDate: {
-        startTimeWeek: '2020-12-21(周一)',
-        endTimeWeek: '2020-12-27(周日)'
+        startTimeWeek: undefined,
+        endTimeWeek: undefined
       },
       // 测试数据  医生和科室信息mock数据，该数据假设已经按部门信息进行排序
-      tableData: [
-        { userId: 2, deptId: 101, subsectionType: '1', schedulingType: ['1', '1', '1', '1', '2', '1', '2'] },
-        { userId: 2, deptId: 101, subsectionType: '2', schedulingType: ['1', '2', '1', '1', '1', '1', '1'] },
-        { userId: 2, deptId: 101, subsectionType: '3', schedulingType: ['1', '1', '1', '1', '2', '1', '1'] },
-        { userId: 3, deptId: 102, subsectionType: '1', schedulingType: ['1', '1', '2', '1', '', '1', '1'] },
-        { userId: 3, deptId: 102, subsectionType: '2', schedulingType: ['1', '1', '1', '1', '1', '1', '1'] },
-        { userId: 3, deptId: 102, subsectionType: '3', schedulingType: ['1', '1', '1', '1', '1', '1', '1'] },
-        { userId: 4, deptId: 103, subsectionType: '1', schedulingType: ['1', '1', '1', '', '1', '1', '2'] },
-        { userId: 4, deptId: 103, subsectionType: '2', schedulingType: ['1', '1', '1', '1', '1', '2', '1'] },
-        { userId: 4, deptId: 103, subsectionType: '3', schedulingType: ['1', '1', '1', '1', '1', '1', '1'] },
-        { userId: 5, deptId: 104, subsectionType: '1', schedulingType: ['1', '2', '1', '1', '1', '1', '1'] },
-        { userId: 5, deptId: 104, subsectionType: '2', schedulingType: ['1', '1', '1', '1', '1', '1', '1'] },
-        { userId: 5, deptId: 104, subsectionType: '3', schedulingType: ['', '1', '1', '1', '1', '1', '1'] }
-      ],
-      labelNames: [
-        '2020-12-21(周一)',
-        '2020-12-22(周二)',
-        '2020-12-23(周三)',
-        '2020-12-24(周四)',
-        '2020-12-25(周五)',
-        '2020-12-26(周六)',
-        '2020-12-27(周日)'
-      ],
+      // 能出现在数据列表中的数据，一定是在user表中的排班字段为需要排班的信息才会显示
+      tableData: [],
+      // 这里需要保留7个位置，在初始化赋值时会自动匹配
+      labelNames: ['', '', '', '', '', '', ''],
       // 遮罩层
       loading: false,
       // 排班列表中时段码表
