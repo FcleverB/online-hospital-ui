@@ -5,6 +5,7 @@ import request from '@/utils/request'
 export function queryUsersNeedScheduling(deptId) {
   return request({
     url: '/doctor/scheduling/queryUsersNeedScheduling',
+    method: 'get',
     params: { deptId: deptId }
   })
 }

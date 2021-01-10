@@ -363,7 +363,7 @@ export const asyncRoutes = [
       },
       {
         path: 'patient',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/doctor/patient/index'),
         name: '/doctor/patient',
         meta: { title: '患者库', icon: 'list' }
       }
