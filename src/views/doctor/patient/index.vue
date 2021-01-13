@@ -335,7 +335,7 @@ export default {
     },
     // 根据出生年月计算年龄
     calculateAgeFormatter(row) {
-      return 0
+      return this.getAge(row.birthday)
     },
     // 模态框  取消按钮
     cancelFile() {

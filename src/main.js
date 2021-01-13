@@ -13,7 +13,7 @@ import './permission' // 权限控制
 import './utils/error-log' // 错误日志
 import * as filters from './filters' // 全局过滤器
 
-import { resetForm, addDateRange, transferDictCode, handleTree } from '@/utils/hospital-uitls' // 通用方法(重置表单,日期范围拆分,码表转换)
+import { resetForm, addDateRange, transferDictCode, handleTree,getAge } from '@/utils/hospital-uitls' // 通用方法(重置表单,日期范围拆分,码表转换)
 import { getDataByType } from '@/api/system/dict/data' // 根据字典类型获取字典数据
 
 // 全局方法挂载(这里挂载了自定义的全局通用方法)
@@ -22,6 +22,7 @@ Vue.prototype.addDateRange = addDateRange
 Vue.prototype.transferDictCode = transferDictCode
 Vue.prototype.getDataByType = getDataByType // 加载全局的根据字典类型查询字典的方法[基本每个页面都要使用]
 Vue.prototype.handleTree = handleTree // 挂载全局的构造树结构的方法
+Vue.prototype.getAge = getAge // 挂载全局的根据出生年月计算年龄的方法
 // 挂载全局消息框
 // 成功消息
 Vue.prototype.msgSuccess = function(msg) {

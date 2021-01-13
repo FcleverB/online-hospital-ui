@@ -85,3 +85,62 @@ export function handleTree(data, id, parentId, children, rootId) {
   })
   return treeData !== '' ? treeData : data
 }
+
+/**
+ * 根据出生年月获取年龄的工具方法
+ * @param birthday 格式必须为yyyy-MM-dd
+ */
+export function getAge(birthday) {
+  // 1. 判断参数出生日期是否为null或者空，如果是则直接返回
+  if (birthday === null || birthday === '') {
+    return '出生年月为空！'
+  }
+  // 2. 解析参数出生年月，并转换为日期类型
+  var birthArr = birthday.split('-')
+  var birthYear = birthArr[0]
+  var birthMonth = birthArr[1]
+  var birthDay = birthArr[2]
+  var birthDate = new Date(birthYear, birthMonth - 1, birthDay)
+  // 获取当前日期(均取0点时刻）
+  var date = new Date()
+  var nowDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  // 比如二者大小，如果出生日期大于当前日期，则不合法
+  if (birthDate.getTime() > nowDate.getTime()) {
+    return '出生年月不能晚于当前时间'
+  }
+  // 年龄计算结果
+  var resultAge
+  // 计算出年龄
+  var nowYear = date.getFullYear()
+  var nowMonth = date.getMonth() + 1
+  var nowDay = date.getDate()
+  // 如果出生年和当前年相同，那么就是0岁
+  if (nowYear === parseInt(birthYear)) {
+    resultAge = 0
+  } else {
+    var yearDiff = nowYear - parseInt(birthYear)
+    // 如果当前月份大于出生月，表示还没有到出生月的12倍数，减一年
+    if (nowMonth > birthMonth) {
+      resultAge = yearDiff - 1
+    } else {
+      var monthDiff = Math.abs(nowMonth - parseInt(birthMonth))
+      // 表示在同一个月内，需要判断天数
+      if (monthDiff === 0) {
+        // 如果当天天数大于出生天数，那么就是年想减的年龄
+        if (nowDay >= birthDay) {
+          resultAge = yearDiff
+        } else {
+          // 否则表示还没有到生日，减去一年
+          resultAge = yearDiff - 1
+        }
+      } else {
+        if (nowMonth > parseInt(birthMonth)) {
+          resultAge = yearDiff
+        } else {
+          resultAge = yearDiff - 1
+        }
+      }
+    }
+  }
+  return resultAge
+}
