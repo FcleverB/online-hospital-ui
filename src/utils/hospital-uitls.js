@@ -144,3 +144,15 @@ export function getAge(birthday) {
   }
   return resultAge
 }
+// 根据当前时间，判断是上午1，下午2，晚上3
+export function getCurrentTimeType() {
+  const now = new Date()
+  const hour = now.getHours()
+  if (hour >= 6 && hour < 12) {
+    return '1'
+  } else if (hour >= 12 && hour < 18) {
+    return '2'
+  } else {
+    return '3'
+  }
+}

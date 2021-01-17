@@ -291,6 +291,9 @@ export default {
       this.queryDeptParams.regItemId = this.regItemOptions[0].regItemId
       this.queryDeptParams.regItemFee = this.regItemOptions[0].regItemFee
     })
+    // 根据当前时间计算所处时间段
+    const subsectionType = this.getCurrentTimeType()
+    this.queryDeptParams.subsectionType = subsectionType
     // 加载科室数据
     this.getDeptForScheduling()
   },
