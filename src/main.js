@@ -15,6 +15,7 @@ import * as filters from './filters' // 全局过滤器
 
 import { resetForm, addDateRange, transferDictCode, handleTree, getAge, getCurrentTimeType } from '@/utils/hospital-uitls' // 通用方法(重置表单,日期范围拆分,码表转换)
 import { getDataByType } from '@/api/system/dict/data' // 根据字典类型获取字典数据
+import moment from 'moment'
 
 // 全局方法挂载(这里挂载了自定义的全局通用方法)
 Vue.prototype.resetForm = resetForm
@@ -24,6 +25,8 @@ Vue.prototype.getDataByType = getDataByType // 加载全局的根据字典类型
 Vue.prototype.handleTree = handleTree // 挂载全局的构造树结构的方法
 Vue.prototype.getAge = getAge // 挂载全局的根据出生年月计算年龄的方法
 Vue.prototype.getCurrentTimeType = getCurrentTimeType // 挂载全局的判断当前时刻是上午|下午|晚上的方法
+Vue.prototype.moment = moment // 挂载全局的格式化日期的方法
+
 // 挂载全局消息框
 // 成功消息
 Vue.prototype.msgSuccess = function(msg) {

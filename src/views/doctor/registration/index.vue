@@ -235,7 +235,8 @@ export default {
         deptId: undefined,
         schedulingType: '1',
         subsectionType: '1',
-        schedulingDay: this.getNowDate(),
+        schedulingDay: this.moment(new Date()).format('YYYY-MM-DD'),
+        // schedulingDay: this.getNowDate(),
         regItemId: undefined, // 默认值选门诊
         regItemFee: undefined
       },
@@ -308,25 +309,6 @@ export default {
     }
   },
   methods: {
-    // 获取yyyy-MM-dd格式的时间
-    getNowDate() {
-      // 获取系统时间
-      const date = new Date()
-      // 得到年月日，月份要加一
-      const year = date.getFullYear()
-      let month = date.getMonth() + 1
-      let day = date.getDate()
-      // 判断月小于10要拼接0
-      if (month < 10) {
-        month = '0' + month
-      }
-      // 判断日小于10要拼接0
-      if (day < 10) {
-        day = '0' + day
-      }
-      // 组合成yyyy-MM-dd返回
-      return year + '-' + month + '-' + day
-    },
     // 根据身份证号查询患者信息
     handleIdCardQuery() {
       this.patientLoading = true
