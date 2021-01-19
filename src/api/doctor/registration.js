@@ -30,6 +30,6 @@ export function addRegistration(data) {
 export function charge(registrationId) {
   return request({
     url: '/doctor/registration/charge/' + registrationId,
-    method: 'post'
+    method: 'put'
   })
 }
