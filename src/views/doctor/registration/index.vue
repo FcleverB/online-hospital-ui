@@ -95,7 +95,7 @@
       <el-row>
         <el-col :span="12">
           <!--单选框组   用来显示挂号项目的类别-->
-          <el-radio-group v-model="queryDeptParams.regItemId" @change="registeredItemChange">
+          <el-radio-group v-model="queryDeptParams.registrationItemId" @change="registeredItemChange">
             <el-radio-button
               v-for="d in regItemOptions"
               :key="d.regItemId"
@@ -194,7 +194,7 @@
 </template>
 
 <script>
-import { listDeptForScheduling, getPatientByIdCard } from '@/api/doctor/registration'
+import { listDeptForScheduling, getPatientByIdCard, addRegistration, charge } from '@/api/doctor/registration'
 import { selectAllDept } from '@/api/system/dept/dept'
 import { selectAllRegisteredItem } from '@/api/system/registeredItem/registeredItem'
 
@@ -232,13 +232,12 @@ export default {
       regItemOptions: [],
       // 有号部门的查询条件
       queryDeptParams: {
-        deptId: undefined,
+        deptId: 101,
         schedulingType: '1',
         subsectionType: '1',
         schedulingDay: this.moment(new Date()).format('YYYY-MM-DD'),
-        // schedulingDay: this.getNowDate(),
-        regItemId: undefined, // 默认值选门诊
-        regItemFee: undefined
+        registrationItemId: undefined, // 默认值选门诊
+        registrationAmount: undefined
       },
       // 表单校验
       rules: {
@@ -289,7 +288,7 @@ export default {
     selectAllRegisteredItem().then(res => {
       this.regItemOptions = res.data
       // 设置默认值及默认值对应的挂号费用
-      this.queryDeptParams.regItemId = this.regItemOptions[0].regItemId
+      this.queryDeptParams.registrationItemId = this.regItemOptions[0].regItemId
       this.queryDeptParams.regItemFee = this.regItemOptions[0].regItemFee
     })
     // 根据当前时间计算所处时间段
@@ -324,7 +323,7 @@ export default {
           this.patientLoading = false
           // 无法根据指定身份证号加载数据的时候清空
           this.patientParams = {
-            idCard: undefined, // 身份证号
+            idCard: this.patientParams.idCard, // 身份证号
             name: undefined,
             birthday: undefined,
             address: undefined,
@@ -342,7 +341,7 @@ export default {
         // id匹配成功
         if (id === item.regItemId) {
           // 将查询条件对象中的挂号项目id切换为对应的id
-          this.queryDeptParams.regItemId = item.regItemId
+          this.queryDeptParams.registrationItemId = item.regItemId
           // 将查询条件对象中的挂号项目费用切换为对应的费用
           this.queryDeptParams.regItemFee = item.regItemFee
         }
@@ -359,7 +358,63 @@ export default {
     },
     // 执行挂号收费的方法
     handleRegistration() {
-      //
+      this.$refs['form'].validate(valid => {
+        if (valid) {
+          this.$confirm('是否给【' + this.patientParams.name + '】进行挂号操作?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            // 组装要提交到后台的数据
+            const data = {
+              'patientDto': this.patientParams,
+              'registrationDto': {
+                deptId: this.queryDeptParams.deptId,
+                registrationItemId: this.queryDeptParams.registrationItemId,
+                registrationAmount: this.queryDeptParams.regItemFee,
+                visitDate: this.queryDeptParams.schedulingDay,
+                schedulingType: this.queryDeptParams.schedulingType,
+                subsectionType: this.queryDeptParams.subsectionType
+              }
+            }
+            // 调用挂号功能api
+            addRegistration(data).then(res => {
+              this.msgSuccess('挂号成功，挂号单号为【' + res.data + '】')
+              // 清空页面上的查询数据
+              this.resetDeptQuery()
+              this.patientParams = {
+                idCard: undefined, // 身份证号
+                name: undefined,
+                birthday: undefined,
+                address: undefined,
+                age: undefined,
+                sex: undefined,
+                phone: undefined
+              }
+              this.$confirm('是否给挂号Id为【' + res.data + '】的挂号进行收费?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+              }).then(() => {
+                // 调用收费
+                charge(res.data).then(res => {
+                  this.msgSuccess('收费成功')
+                }).catch(() => {
+                  this.msgError('收费失败')
+                })
+              }).catch(() => {
+                this.msgInfo('取消收费')
+              })
+              // 查询科室列表
+              this.getDeptForScheduling()
+            }).catch(() => {
+              this.msgError('挂号失败')
+            })
+          }).catch(() => {
+            this.msgInfo('取消挂号操作')
+          })
+        }
+      })
     },
     // 科室列表查询按钮
     // 查询

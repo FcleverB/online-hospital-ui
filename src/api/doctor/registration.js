@@ -16,3 +16,20 @@ export function getPatientByIdCard(idCard) {
     method: 'get'
   })
 }
+
+// 挂号功能
+export function addRegistration(data) {
+  return request({
+    url: '/doctor/registration/addRegistration',
+    method: 'post',
+    data: data
+  })
+}
+
+// 收费（修改对应挂号信息的状态）
+export function charge(registrationId) {
+  return request({
+    url: '/doctor/registration/charge/' + registrationId,
+    method: 'post'
+  })
+}
