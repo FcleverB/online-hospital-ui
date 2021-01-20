@@ -33,3 +33,28 @@ export function charge(registrationId) {
     method: 'put'
   })
 }
+
+// 分页查询挂号信息
+export function queryRegistrationForPage(query) {
+  return request({
+    url: '/doctor/registration/queryRegistrationForPage',
+    method: 'get',
+    params: query
+  })
+}
+
+// 作废【根据挂号流水号】
+export function doInvalid(registrationId) {
+  return request({
+    url: '/doctor/registration/doInvalid/' + registrationId,
+    method: 'put'
+  })
+}
+
+// 退号【根据挂号流水号】
+export function doReturn(registrationId) {
+  return request({
+    url: '/doctor/registration/doReturn/' + registrationId,
+    method: 'put'
+  })
+}

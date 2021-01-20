@@ -194,7 +194,7 @@
 </template>
 
 <script>
-import { listDeptForScheduling, getPatientByIdCard, addRegistration, charge } from '@/api/doctor/registration'
+import { listDeptForScheduling, getPatientByIdCard, addRegistration, charge } from '@/api/doctor/registration/registration'
 import { selectAllDept } from '@/api/system/dept/dept'
 import { selectAllRegisteredItem } from '@/api/system/registeredItem/registeredItem'
 

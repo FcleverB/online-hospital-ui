@@ -40,7 +40,7 @@
 <script>
 // 引入科室api
 import { selectAllDept } from '@/api/system/dept/dept'
-import { queryUsersNeedScheduling, queryMyScheduling } from '@/api/doctor/scheduling'
+import { queryUsersNeedScheduling, queryMyScheduling } from '@/api/doctor/scheduling/scheduling'
 
 // 引入用户api
 export default {

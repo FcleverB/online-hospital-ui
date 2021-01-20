@@ -192,7 +192,7 @@
 
 <script>
 // 引入患者相关api
-import { listPatientForPage, getPatientById, getPatientFileById } from '@/api/doctor/patient'
+import { listPatientForPage, getPatientById, getPatientFileById } from '@/api/doctor/patient/patient'
 
 export default {
   name: 'Patient',
