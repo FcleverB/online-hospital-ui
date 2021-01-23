@@ -253,6 +253,9 @@ export default {
         ]
       },
       deptRules: {
+        deptId: [
+          { required: true, message: '所属科室不能为空', trigger: 'change' }
+        ],
         schedulingType: [
           { required: true, message: '挂号类型不能为空', trigger: 'change' }
         ],

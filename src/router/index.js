@@ -246,6 +246,55 @@ export const asyncRoutes = [
       }
     ]
   },
+  // 看病就诊
+  {
+    path: '/doctor',
+    component: Layout,
+    redirect: 'noRedirect',
+    name: '/doctor',
+    meta: {
+      title: '看病就诊',
+      icon: 'excel'
+    },
+    children: [
+      {
+        path: 'registered',
+        component: () => import('@/views/doctor/registration/index'),
+        name: '/doctor/registered',
+        meta: { title: '门诊挂号', icon: 'list' }
+      },
+      {
+        path: 'registeredlist',
+        component: () => import('@/views/doctor/registration/list'),
+        name: '/doctor/registeredlist',
+        meta: { title: '挂号列表', icon: 'list' }
+      },
+      {
+        path: 'newcare',
+        component: () => import('@/views/doctor/care/index'),
+        name: '/doctor/newcare',
+        meta: { title: '新开就诊', icon: 'list' }
+      },
+      {
+        path: 'myscheduling',
+        component: () => import('@/views/doctor/scheduling/myScheduling'),
+        name: '/doctor/myscheduling',
+        meta: { title: '我的排班', icon: 'list' }
+      },
+      {
+        path: 'scheduling',
+        component: () => import('@/views/doctor/scheduling/index'),
+        name: '/doctor/scheduling',
+        meta: { title: '医生排班', icon: 'list' }
+      },
+      {
+        path: 'patient',
+        component: () => import('@/views/doctor/patient/index'),
+        name: '/doctor/patient',
+        meta: { title: '患者库', icon: 'list' }
+      }
+    ]
+  },
   // 收费管理
   {
     path: '/charge',
@@ -317,55 +366,6 @@ export const asyncRoutes = [
         component: () => import('@/views/error-page/404'),
         name: '/check/checklist',
         meta: { title: '检查结果查询', icon: 'list' }
-      }
-    ]
-  },
-  // 看病就诊
-  {
-    path: '/doctor',
-    component: Layout,
-    redirect: 'noRedirect',
-    name: '/doctor',
-    meta: {
-      title: '看病就诊',
-      icon: 'excel'
-    },
-    children: [
-      {
-        path: 'registered',
-        component: () => import('@/views/doctor/registration/index'),
-        name: '/doctor/registered',
-        meta: { title: '门诊挂号', icon: 'list' }
-      },
-      {
-        path: 'registeredlist',
-        component: () => import('@/views/doctor/registration/list'),
-        name: '/doctor/registeredlist',
-        meta: { title: '挂号列表', icon: 'list' }
-      },
-      {
-        path: 'newcare',
-        component: () => import('@/views/error-page/404'),
-        name: '/doctor/newcare',
-        meta: { title: '新开就诊', icon: 'list' }
-      },
-      {
-        path: 'myscheduling',
-        component: () => import('@/views/doctor/scheduling/myScheduling'),
-        name: '/doctor/myscheduling',
-        meta: { title: '我的排班', icon: 'list' }
-      },
-      {
-        path: 'scheduling',
-        component: () => import('@/views/doctor/scheduling/index'),
-        name: '/doctor/scheduling',
-        meta: { title: '医生排班', icon: 'list' }
-      },
-      {
-        path: 'patient',
-        component: () => import('@/views/doctor/patient/index'),
-        name: '/doctor/patient',
-        meta: { title: '患者库', icon: 'list' }
       }
     ]
   }
