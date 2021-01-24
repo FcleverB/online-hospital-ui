@@ -207,7 +207,7 @@
         <!--左侧患者信息卡片结束-->
       </el-col>
       <el-col :span="16">
-        <!--右侧病历和处方卡片开始-->
+        <!--右侧顶部病历和处方按钮卡片开始-->
         <el-card>
           <el-row :gutter="5">
             <el-col :span="12">
@@ -216,15 +216,118 @@
               <span v-else style="color: blue;">{{careHistory.registrationId}}</span>
               <br/>
               病历编号：
-              <span style="color: red;">保存病历后显示</span>
+              <span v-if="careHistory.chId === undefined" style="color: red;">保存病历后显示</span>
+              <span v-else style="color: blue;">{{careHistory.chId}}</span>
             </el-col>
             <el-col :span="12" style="text-align: right">
-              <el-button type="primary" icon="el-icon-check" :disabled="careHistory.registrationId === undefined">保存病历</el-button>
+              <el-button type="primary" icon="el-icon-check" :disabled="careHistory.registrationId === undefined" @click="handleSaveCareHistory">保存病历</el-button>
               <el-button type="danger" icon="el-icon-finished" :disabled="careHistory.registrationId === undefined">就诊完成</el-button>
             </el-col>
           </el-row>
         </el-card>
-        <!--右侧病历和处方卡片结束-->
+        <!--右侧顶部病历和处方按钮卡片结束-->
+        <!--病历和处方信息开始-->
+        <el-card style="margin-top: 5px;">
+          <el-tabs :v-model="careActiveName" type="card">
+            <el-tab-pane label="病历">
+              <!-- 病例表单开始 -->
+              <el-card>
+                <el-form ref="form" :model="careHistory" :inline="true" label-width="88px">
+                  <el-form-item label="发病日期" prop="caseDate">
+                    <el-date-picker
+                      v-model="careHistory.caseDate"
+                      value-format="yyyy-MM-dd"
+                      size="small"
+                    />
+                  </el-form-item>
+                  <el-form-item label="接诊类型" prop="receiveType">
+                    <el-select
+                      v-model="careHistory.receiveType"
+                      placeholder="接诊类型"
+                      size="small"
+                    >
+                      <el-option
+                        v-for="dict in receiveTypeOptions"
+                        :key="dict.dictValue"
+                        :label="dict.dictLabel"
+                        :value="dict.dictValue"
+                      />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="是否传染" prop="isContagious">
+                    <el-select
+                      v-model="careHistory.isContagious"
+                      placeholder="是否传染"
+                      size="small"
+                    >
+                      <el-option
+                        v-for="dict in isContagiousOptions"
+                        :key="dict.dictValue"
+                        :label="dict.dictLabel"
+                        :value="dict.dictValue"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </el-form>
+                <el-form ref="form" :model="careHistory" label-width="88px">
+                  <el-form-item label="主诉" :inline="false" prop="caseTitle">
+                    <el-input
+                      v-model="careHistory.caseTitle"
+                      type="textarea"
+                      :autosize="{ minRows: 4, maxRows: 6}"
+                      placeholder="请输入主诉"
+                      style="width:100%"
+                      maxlength="100"
+                      show-word-limit
+                      size="small"
+                    />
+                  </el-form-item>
+                  <el-form-item label="诊断信息" :inline="false" prop="caseResult">
+                    <el-input
+                      v-model="careHistory.caseResult"
+                      type="textarea"
+                      :autosize="{ minRows: 4, maxRows: 6}"
+                      placeholder="请输入诊断信息"
+                      style="width:100%"
+                      maxlength="200"
+                      show-word-limit
+                      size="small"
+                    />
+                  </el-form-item>
+                  <el-form-item label="医生建议" :inline="false" prop="doctorTips">
+                    <el-input
+                      v-model="careHistory.doctorTips"
+                      type="textarea"
+                      :autosize="{ minRows: 4, maxRows: 6}"
+                      placeholder="请输入医生建议"
+                      style="width:100%"
+                      maxlength="300"
+                      show-word-limit
+                      size="small"
+                    />
+                  </el-form-item>
+                  <el-form-item label="备注" :inline="false" prop="remark">
+                    <el-input
+                      v-model="careHistory.remark"
+                      type="textarea"
+                      :autosize="{ minRows: 4, maxRows: 6}"
+                      placeholder="请输入备注"
+                      style="width:100%"
+                      maxlength="200"
+                      show-word-limit
+                      size="small"
+                    />
+                  </el-form-item>
+                </el-form>
+              </el-card>
+              <!-- 病例表单结束 -->
+            </el-tab-pane>
+            <el-tab-pane label="处方">
+              处方
+            </el-tab-pane>
+          </el-tabs>
+        </el-card>
+        <!--病历和处方信息结束-->
       </el-col>
     </el-row>
     <!--整个卡片结束-->
@@ -335,7 +438,7 @@
 </template>
 
 <script>
-import { queryToBeSeenRegistration, queryVisitingRegistration, queryVisitCompleteRegistration, receivePatient, getPatientAllMessageByPatientId } from '@/api/doctor/care/care'
+import { queryToBeSeenRegistration, queryVisitingRegistration, queryVisitCompleteRegistration, receivePatient, getPatientAllMessageByPatientId, saveCareHistory } from '@/api/doctor/care/care'
 export default {
   name: 'Index',
   data() {
@@ -350,6 +453,10 @@ export default {
       subsectionTypeOptions: [],
       // 性别的字典数据
       sexOptions: [],
+      // 接诊类型字典数据
+      receiveTypeOptions: [],
+      // 是否传染字典数据
+      isContagiousOptions: [],
       // 患者全部信息
       patientAllObj: {
         patientObj: {
@@ -369,6 +476,8 @@ export default {
       openRegistration: false,
       // 选中的就诊状态的选项卡
       activeName: 't1',
+      // 病历|处方选项卡
+      careActiveName: 'c1',
       // 就诊列表的遮罩层
       tableLoading: false,
       // 待就诊列表数据
@@ -378,7 +487,20 @@ export default {
       // 就诊完成列表数据
       visitCompletedRegistration: [],
       // 病历信息，最终保存到病历信息表中数据
-      careHistory: {}
+      careHistory: {
+        // 当前就诊中的挂号单ID
+        registrationId: undefined,
+        chId: undefined,
+        caseDate: this.moment(new Date()).format('YYYY-MM-DD'), // 默认值当前时间
+        receiveType: '0',
+        isContagious: '0',
+        caseTitle: undefined,
+        caseResult: undefined,
+        doctorTips: undefined,
+        remark: undefined,
+        patientId: undefined,
+        patientName: undefined
+      }
     }
   },
   created() {
@@ -393,6 +515,18 @@ export default {
     // 性别的字典数据
     this.getDataByType('sys_user_sex').then(res => {
       this.sexOptions = res.data
+    })
+    // 接诊类型的字典数据
+    this.getDataByType('his_receive_type').then(res => {
+      this.receiveTypeOptions = res.data
+    })
+    // 是否传染的字典数据
+    this.getDataByType('his_contagious_status').then(res => {
+      this.isContagiousOptions = res.data
+    })
+    //  加载处方详情的状态字典数据
+    this.getDataByType('his_order_details_status').then(res => {
+      this.orderDetailsStatusOptions = res.data
     })
   },
   methods: {
@@ -499,6 +633,25 @@ export default {
         this.loading = false
       })
       // 还需要根据挂号单ID查询上次的病历信息和处方信息
+    },
+    // 保存病历
+    handleSaveCareHistory() {
+      if (!this.careHistory.registrationId) {
+        this.msgError('请选择挂号患者')
+        return
+      }
+      // 封装数据
+      this.careHistory.patientId = this.patientAllObj.patientObj.patientId
+      this.careHistory.patientName = this.patientAllObj.patientObj.name
+      this.loading = true
+      saveCareHistory(this.careHistory).then(res => {
+        this.msgSuccess('保存病历成功')
+        this.loading = false
+        this.careHistory.chId = res.data.chId
+      }).catch(() => {
+        this.msgError('保存病历失败')
+        this.loading = false
+      })
     }
   }
 }

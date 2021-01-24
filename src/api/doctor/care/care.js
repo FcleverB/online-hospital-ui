@@ -39,3 +39,12 @@ export function getPatientAllMessageByPatientId(patientId) {
     method: 'get'
   })
 }
+
+// 保存病历信息
+export function saveCareHistory(data) {
+  return request({
+    url: '/doctor/care/saveCareHistory',
+    method: 'post',
+    data: data
+  })
+}
