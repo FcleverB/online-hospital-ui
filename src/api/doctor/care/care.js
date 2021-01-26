@@ -72,3 +72,28 @@ export function queryOrdersByChId(chId) {
     method: 'get'
   })
 }
+
+// 保存处方和处方详情信息
+export function saveCareOrderAndItem(data) {
+  return request({
+    url: '/doctor/care/saveCareOrderAndItem',
+    method: 'post',
+    data: data
+  })
+}
+
+// 根据处方详情id删除处方详情信息
+export function deleteCareOrderItemById(itemId) {
+  return request({
+    url: '/doctor/care/deleteCareOrderItemById/' + itemId,
+    method: 'delete'
+  })
+}
+
+// 完成就诊
+export function visitComplete(registrationId) {
+  return request({
+    url: '/doctor/care/visitComplete/' + registrationId,
+    method: 'put'
+  })
+}

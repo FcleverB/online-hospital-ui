@@ -226,7 +226,7 @@
             </el-col>
             <el-col :span="12" style="text-align: right">
               <el-button type="primary" icon="el-icon-check" :disabled="careHistory.registrationId === undefined" @click="handleSaveCareHistory">保存病历</el-button>
-              <el-button type="danger" icon="el-icon-finished" :disabled="careHistory.registrationId === undefined" @click="handleVisitComplete">完成就诊</el-button>
+              <el-button type="danger" icon="el-icon-finished" :disabled="careHistory.chId === undefined" @click="handleVisitComplete">完成就诊</el-button>
             </el-col>
           </el-row>
         </el-card>
@@ -643,8 +643,9 @@
 
 <script>
 import { queryToBeSeenRegistration, queryVisitingRegistration, queryVisitCompleteRegistration,
+  getCareHistoryByRegistrationId, queryOrdersByChId, getCareHistoryListByPatientId,
   receivePatient, getPatientAllMessageByPatientId, saveCareHistory,
-  getCareHistoryByRegistrationId, queryOrdersByChId, getCareHistoryListByPatientId } from '@/api/doctor/care/care'
+  saveCareOrderAndItem, deleteCareOrderItemById, visitComplete } from '@/api/doctor/care/care'
 import { listCheckItemForPage } from '@/api/system/checkItem/checkItem'
 import { listMedicinesForPage } from '@/api/erp/medicines/medicines'
 export default {
@@ -982,6 +983,26 @@ export default {
     },
     // 处方项目删除
     handleCareOrderItemDeleteByItemId(row) {
+      // 获取处方项目id
+      const itemId = row.itemId
+      // 处方项名称
+      const itemName = row.itemName
+      this.$confirm('是否确定删除【' + itemName + '】这条详情, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteCareOrderItemById(itemId).then(res => {
+          this.msgSuccess('删除成功')
+          // 刷新处方列表
+          this.getCareOrdersByChId(this.careHistory.chId)
+        }).catch(() => {
+          this.msgError('删除失败')
+        })
+      }).catch(() => {
+        this.msgInfo('取消删除操作')
+        this.loading = false
+      })
     },
     // 药药用处方和检查处方的模态框中的保存添加的药用或者检查处方信息
     handleSaveOrderItem() {
@@ -992,7 +1013,18 @@ export default {
       this.submitCareOrder.careOrder.patientId = this.careHistory.patientId
       this.submitCareOrder.careOrder.patientName = this.careHistory.patientName
       this.submitCareOrder.careOrder.chId = this.careHistory.chId
-      console.log(this.submitCareOrder)
+      this.loading = true
+      saveCareOrderAndItem(this.submitCareOrder).then(res => {
+        this.loading = false
+        this.msgSuccess('保存成功')
+        // 刷新处方列表
+        this.getCareOrdersByChId(this.careHistory.chId)
+        // 关闭当前弹出层
+        this.openAddOrderItem = false
+      }).catch(() => {
+        this.msgError('保存失败')
+        this.loading = false
+      })
     },
     // 药用处方和检查处方的模态框中删除已选择的处方项目
     handleCareOrderItemDelete(row) {
@@ -1174,6 +1206,62 @@ export default {
     },
     // 完成就诊
     handleVisitComplete() {
+      const registrationId = this.careHistory.registrationId
+      const patientName = this.careHistory.patientName
+      this.$confirm('是否确定完成【' + patientName + '】的就诊, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        visitComplete(registrationId).then(res => {
+          this.msgSuccess('操作成功')
+          // 重置所有数据
+          this.resetAllData()
+        }).catch(() => {
+          this.msgError('操作失败')
+        })
+      }).catch(() => {
+        this.msgError('操作已取消')
+        this.loading = false
+      })
+    },
+    // 重置所有数据
+    resetAllData() {
+      // 重置患者全部信息  病历、档案、历史病历
+      this.patientAllObj = {
+        patientObj: {},
+        patientFileObj: {},
+        careHistoryObjList: []
+      }
+      // 当前挂号单对应的病历
+      this.careHistory = {
+        // 当前就诊中的挂号单ID
+        regId: undefined,
+        chId: undefined,
+        caseDate: undefined,
+        receiveType: '0',
+        isContagious: '0',
+        caseTitle: undefined,
+        caseResult: undefined,
+        doctorTips: undefined,
+        remark: undefined,
+        patientId: undefined,
+        patientName: undefined
+      }
+      // 病历id对应的处方
+      this.careOrders = []
+      // 病历id对应的要保存的处方和处方详细项目
+      this.submitCareOrder = {
+        careOrder: {
+          allAmount: 0.00,
+          patientId: undefined,
+          patientName: undefined,
+          coType: '0' // 默认为药用处方
+        },
+        careOrderItems: []
+      }
+      // 门诊和急诊，重置为门诊
+      this.schedulingType = '1'
     }
   }
 }
