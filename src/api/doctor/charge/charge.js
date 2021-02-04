@@ -8,3 +8,12 @@ export function getNoChargeAllCareByRegistrationId(registrationId) {
     method: 'get'
   })
 }
+
+// 创建订单并现金支付
+export function createOrderChargeWithCash(data) {
+  return request({
+    url: '/doctor/charge/createOrderChargeWithCash',
+    method: 'post',
+    data: data
+  })
+}

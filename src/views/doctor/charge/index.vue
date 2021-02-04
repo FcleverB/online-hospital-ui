@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import { getNoChargeAllCareByRegistrationId } from '@/api/doctor/charge/charge'
+import { getNoChargeAllCareByRegistrationId, createOrderChargeWithCash } from '@/api/doctor/charge/charge'
 
 export default {
   name: 'Index',
@@ -141,13 +141,14 @@ export default {
       const registrationId = this.queryParams.registrationId
       if (registrationId === undefined || registrationId === '') {
         this.msgError('请输入挂号单据id后再执行查询操作！')
+        // 清空数据
+        this.resetCurrentParams()
         return
       }
       this.loading = true
       this.loadingText = '数据查询中，请稍后......'
       // 清空原有数据
-      this.careHistory = {}
-      this.careOrders = []
+      this.resetCurrentParams()
       // 调用api执行查询操作
       getNoChargeAllCareByRegistrationId(registrationId).then(res => {
         this.careHistory = res.data.careHistory
@@ -186,9 +187,79 @@ export default {
     },
     // 现金
     handlePayWithCash() {
+      // 判断是否有勾选处方详情
+      if (this.itemObjs.length === 0) {
+        this.msgInfo('未选择要支付的处方详情信息，请选择后再支付！')
+        return
+      }
+      // 组装数据
+      const orderChargeObj = {
+        // 支付订单信息主表
+        orderChargeDto: {
+          orderAmount: this.allAmount, // 总金额
+          chId: this.careHistory.chId, // 病历id
+          registrationId: this.careHistory.registrationId, // 挂号单据id
+          patientName: this.careHistory.patientName
+        },
+        // 支付订单详细信息子表
+        orderChargeItemDtoList: []
+      }
+      this.itemObjs.filter(item => {
+        const obj = {
+          itemId: item.itemId,
+          coId: item.coId,
+          itemName: item.itemName,
+          itemPrice: item.price,
+          itemNum: item.num,
+          itemType: item.itemType,
+          itemAmount: item.amount
+        }
+        orderChargeObj.orderChargeItemDtoList.push(obj)
+      })
+      // 发送请求
+      this.loading = true
+      this.loadingText = '创建订单并现金支付中'
+      this.$confirm('是否确定创建订单并现金支付?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        createOrderChargeWithCash(orderChargeObj).then(res => {
+          this.msgSuccess('创建订单并现金支付成功')
+          // 清空原有数据
+          this.resetCurrentParams()
+          // 这里应该重新查询一下，显示剩余未支付的处方内容
+          getNoChargeAllCareByRegistrationId(this.queryParams.registrationId).then(res => {
+            this.careHistory = res.data.careHistory
+            this.careOrders = res.data.careOrders
+            this.loading = false
+            this.loadingText = ''
+            // 动态设置折叠面板的展示数量
+            this.careOrders.filter((item, index) => {
+              this.activeNames.push(index)
+            })
+          })
+        }).catch(() => {
+          this.msgError('创建订单并现金支付失败')
+          this.loading = false
+        })
+      }).catch(() => {
+        this.msgError('创建订单并现金支付取消')
+        this.loading = false
+      })
     },
     // 支付宝支付
     handlePayWithAliPay() {
+      // 判断是否有勾选处方详情
+      if (this.itemObjs.length === 0) {
+        this.msgInfo('未选择要支付的处方详情信息，请选择后再支付！')
+        return
+      }
+    },
+    // 清空careHistory和careOrders
+    resetCurrentParams() {
+      this.careHistory = {}
+      this.careOrders = []
     },
     // 监听多个表格的checkbox的选中事件
     handleCareOrderItemSelectionChange(selection, coId) {
