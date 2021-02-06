@@ -94,6 +94,7 @@
       :visible.sync="openPay"
       center
       :close-on-click-modal="false"
+      :before-close="handleClose"
       append-to-body
       >
       <el-form label-position="left" label-width="120px" inline class="demo-table-expand">
@@ -427,6 +428,21 @@ export default {
     },
     tableRowClassName({ row, rowIndex }) {
       row.index = rowIndex
+    },
+    // 支付宝收费页面关闭触发
+    handleClose() {
+      this.$confirm('您确定放弃支付吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.msgInfo('您已放弃支付，可以回到收费查询列表里面再次支付')
+        this.openPay = false
+        // 关闭轮询
+        clearInterval(this.intervalObj)
+      }).catch(() => {
+        this.msgSuccess('欢迎继续支付')
+      })
     }
   }
 }
