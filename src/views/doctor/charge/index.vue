@@ -88,14 +88,45 @@
       <!--处方和详情信息结束-->
     </div>
     <!--病历|处方|处方详情信息结束-->
+    <!--支付宝支付二维码模态框开始-->
+    <el-dialog
+      :title="title"
+      :visible.sync="openPay"
+      center
+      :close-on-click-modal="false"
+      append-to-body
+      >
+      <el-form label-position="left" label-width="120px" inline class="demo-table-expand">
+        <el-card>
+          <el-form-item label="订单号：">
+            <span>{{payObj.orderId}}</span>
+          </el-form-item>
+          <el-form-item label="总金额：">
+            <span>{{payObj.allAmount}}</span>
+          </el-form-item>
+        </el-card>
+      </el-form>
+      <div style="text-align: center">
+        <vue-qr class="vue-qr" :text="payObj.payUrl" :size="200"></vue-qr>
+        <div>
+          请使用支付宝扫码支付
+        </div>
+      </div>
+    </el-dialog>
+    <!--支付宝支付二维码模态框结束-->
   </div>
 </template>
 
 <script>
-import { getNoChargeAllCareByRegistrationId, createOrderChargeWithCash } from '@/api/doctor/charge/charge'
+import { getNoChargeAllCareByRegistrationId, createOrderChargeWithCash, createOrderChargeWithZfb, queryOrderChargeByOrderId } from '@/api/doctor/charge/charge'
+// 引入vue-qr 生成二维码
+import vueQr from 'vue-qr'
 
 export default {
   name: 'Index',
+  components: {
+    vueQr
+  },
   data() {
     return {
       // 整体遮罩层
@@ -126,7 +157,15 @@ export default {
       // 当前选中的所有项目集合
       itemObjs: [],
       // 处方折叠面板展开的名字
-      activeNames: []
+      activeNames: [],
+      // 支付对象（创建支付宝订单返回数据）
+      payObj: {},
+      // 支付宝二维码模态框标题
+      title: '',
+      // 支付宝二维码模态框可见
+      openPay: false,
+      // 定时轮询
+      intervalObj: undefined
     }
   },
   created() {
@@ -160,10 +199,9 @@ export default {
           this.activeNames.push(index)
         })
       }).catch(() => {
-        this.msgError('查询挂号单对应的病历信息和处方信息出错')
         this.loading = false
-        this.loadingText = ''
       })
+      // 这里不用捕获异常了，抛出后会触发Notication来解决
     },
     // 全选
     handleSelectAll() {
@@ -233,10 +271,14 @@ export default {
             this.careHistory = res.data.careHistory
             this.careOrders = res.data.careOrders
             this.loading = false
+            this.allAmount = 0.00
+            this.itemObjs = []
             this.loadingText = ''
             // 动态设置折叠面板的展示数量
             this.careOrders.filter((item, index) => {
               this.activeNames.push(index)
+            }).catch(() => {
+              this.loading = false
             })
           })
         }).catch(() => {
@@ -255,6 +297,90 @@ export default {
         this.msgInfo('未选择要支付的处方详情信息，请选择后再支付！')
         return
       }
+      // 组装数据
+      const orderChargeObj = {
+        // 支付订单信息主表
+        orderChargeDto: {
+          orderAmount: this.allAmount, // 总金额
+          chId: this.careHistory.chId, // 病历id
+          registrationId: this.careHistory.registrationId, // 挂号单据id
+          patientName: this.careHistory.patientName
+        },
+        // 支付订单详细信息子表
+        orderChargeItemDtoList: []
+      }
+      this.itemObjs.filter(item => {
+        const obj = {
+          itemId: item.itemId,
+          coId: item.coId,
+          itemName: item.itemName,
+          itemPrice: item.price,
+          itemNum: item.num,
+          itemType: item.itemType,
+          itemAmount: item.amount
+        }
+        orderChargeObj.orderChargeItemDtoList.push(obj)
+      })
+      // 发送请求
+      this.loading = true
+      this.loadingText = '创建订单并支付宝支付中'
+      this.$confirm('是否确定创建订单并支付宝支付?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        createOrderChargeWithZfb(orderChargeObj).then(res => {
+          this.loading = false
+          this.msgSuccess('创建订单成功，请扫码支付')
+          // 1. 从返回数据中生成二维码,进行支付，会自动调用回调请求
+          this.payObj = res.data
+          this.openPay = true
+          this.title = '请使用支付宝扫码支付'
+          const tx = this // 层数套太多容易有问题
+          // 2. 定时发送查询该订单的装填，如果支付成功，继续执行，否则抛出提示信息
+          tx.intervalObj = setInterval(function() {
+            // 根据订单id查询订单信息，看是否已经支付完成
+            queryOrderChargeByOrderId(tx.payObj.orderId).then(res => {
+              if (res.data.orderStatus === '1') {
+                // 支付成功
+                // 清空定时器
+                clearInterval(tx.intervalObj)
+                tx.$notify({
+                  title: '支付成功',
+                  message: '[' + tx.payObj.orderId + ']对应的订单支付成功',
+                  type: 'success'
+                })
+                // 关闭模态框
+                tx.openPay = false
+                // 清空原有数据
+                tx.resetCurrentParams()
+                // 这里应该重新查询一下，显示剩余未支付的处方内容
+                getNoChargeAllCareByRegistrationId(tx.queryParams.registrationId).then(res => {
+                  tx.careHistory = res.data.careHistory
+                  tx.careOrders = res.data.careOrders
+                  tx.loading = false
+                  tx.allAmount = 0.00
+                  tx.itemObjs = []
+                  tx.loadingText = ''
+                  // 动态设置折叠面板的展示数量
+                  tx.careOrders.filter((item, index) => {
+                    tx.activeNames.push(index)
+                  })
+                })
+              }
+            }).catch(() => {
+              // 清空定时器
+              clearInterval(this.intervalObj)
+            })
+          }, 2000)
+        }).catch(() => {
+          this.msgError('创建订单并支付宝支付失败')
+          this.loading = false
+        })
+      }).catch(() => {
+        this.msgError('创建订单并支付宝支付取消')
+        this.loading = false
+      })
     },
     // 清空careHistory和careOrders
     resetCurrentParams() {

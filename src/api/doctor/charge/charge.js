@@ -17,3 +17,20 @@ export function createOrderChargeWithCash(data) {
     data: data
   })
 }
+
+// 创建订单并支付宝支付
+export function createOrderChargeWithZfb(data) {
+  return request({
+    url: '/doctor/charge/createOrderChargeWithZfb',
+    method: 'post',
+    data: data
+  })
+}
+
+// 根据支付订单id查询订单信息
+export function queryOrderChargeByOrderId(orderId) {
+  return request({
+    url: '/doctor/charge/queryOrderChargeByOrderId/' + orderId,
+    method: 'get'
+  })
+}
