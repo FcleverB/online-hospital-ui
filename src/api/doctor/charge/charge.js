@@ -53,10 +53,10 @@ export function queryOrderChargeItemByOrderId(orderId) {
 }
 
 // 收费查询列表中现金支付
-export function payWithCase(orderId) {
+export function payWithCash(orderId) {
   return request({
-    url: '/doctor/charge/payWithCase/' + orderId,
-    method: 'get'
+    url: '/doctor/charge/payWithCash/' + orderId,
+    method: 'put'
   })
 }
 
@@ -64,6 +64,6 @@ export function payWithCase(orderId) {
 export function payWithZfb(orderId) {
   return request({
     url: '/doctor/charge/payWithZfb/' + orderId,
-    method: 'get'
+    method: 'put'
   })
 }

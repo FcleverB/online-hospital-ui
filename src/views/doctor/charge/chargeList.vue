@@ -29,36 +29,34 @@
     </el-form>
     <!--查询条件结束-->
     <!--数据列表开始-->
-    <el-card>
-      <el-table v-loading="loading" border :data="chargeTableList">
-        <!--el-table-column:每一行中的每一列
-          prop:对应从:data中取出的数据
-          align:对齐方式
-          label:列名
-          show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
-        -->
-        <el-table-column label="支付订单号" prop="orderId" align="center" width="220"/>
-        <el-table-column label="挂号单号" prop="registrationId" align="center"/>
-        <el-table-column label="患者姓名" prop="patientName" align="center"/>
-        <el-table-column label="订单总金额" prop="orderAmount" align="center">
-          <template slot-scope="scope">
-            {{scope.row.orderAmount}}元
-          </template>
-        </el-table-column>
-        <el-table-column label="支付类型" prop="payType" align="center" :formatter="payTypeFormatter"/>
-        <el-table-column label="订单状态" prop="orderStatus" align="center" :formatter="orderStatusFormatter"/>
-        <el-table-column label="创建时间" prop="createTime" align="center"/>
-        <el-table-column label="操作" align="center" width="260px">
-          <!--slot-scope="scope" 取到当前单元格-->
-          <template slot-scope="scope">
-            <!--传递该条数据到具体处理方法中-->
-            <el-button type="text" icon="el-icon-view" size="mini" @click="handleView(scope.row)">查看详情</el-button>
-            <el-button type="text" icon="el-icon-shopping-cart-2" size="mini" @click="handlePayWithCase(scope.row)">现金收费</el-button>
-            <el-button type="text" icon="el-icon-shopping-cart-2" size="mini" @click="handlePayWithZfb(scope.row)">支付宝收费</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    <el-table v-loading="loading" border :data="chargeTableList">
+      <!--el-table-column:每一行中的每一列
+        prop:对应从:data中取出的数据
+        align:对齐方式
+        label:列名
+        show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
+      -->
+      <el-table-column label="支付订单号" prop="orderId" align="center" width="220"/>
+      <el-table-column label="挂号单号" prop="registrationId" align="center"/>
+      <el-table-column label="患者姓名" prop="patientName" align="center"/>
+      <el-table-column label="订单总金额" prop="orderAmount" align="center">
+        <template slot-scope="scope">
+          {{scope.row.orderAmount}}元
+        </template>
+      </el-table-column>
+      <el-table-column label="支付类型" prop="payType" align="center" :formatter="payTypeFormatter"/>
+      <el-table-column label="订单状态" prop="orderStatus" align="center" :formatter="orderStatusFormatter"/>
+      <el-table-column label="创建时间" prop="createTime" align="center"/>
+      <el-table-column label="操作" align="center" width="260px">
+        <!--slot-scope="scope" 取到当前单元格-->
+        <template slot-scope="scope">
+          <!--传递该条数据到具体处理方法中-->
+          <el-button type="text" icon="el-icon-view" size="mini" @click="handleView(scope.row)">查看详情</el-button>
+          <el-button v-if="scope.row.orderStatus === '0'" type="text" icon="el-icon-shopping-cart-2" size="mini" @click="handlePayWithCase(scope.row)">现金收费</el-button>
+          <el-button v-if="scope.row.orderStatus === '0'" type="text" icon="el-icon-shopping-cart-2" size="mini" @click="handlePayWithZfb(scope.row)">支付宝收费</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
     <!--数据列表结束-->
     <!--底部分页开始-->
     <!--pagination:分页控件
@@ -115,16 +113,56 @@
         <el-table-column label="类型" prop="itemType" align="center" :formatter="itemTypeFormatter"/>
         <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter"/>
       </el-table>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="closeModel">关 闭</el-button>
+      </span>
     </el-dialog>
     <!--查看详情页面结束-->
+    <!--支付宝支付二维码模态框开始-->
+    <el-dialog
+      :title="title"
+      :visible.sync="openPay"
+      center
+      :close-on-click-modal="false"
+      append-to-body
+    >
+      <el-form label-position="left" label-width="120px" inline class="demo-table-expand">
+        <el-card>
+          <el-form-item label="订单号：">
+            <span>{{payObj.orderId}}</span>
+          </el-form-item>
+          <el-form-item label="总金额：">
+            <span>{{payObj.allAmount}}</span>
+          </el-form-item>
+        </el-card>
+      </el-form>
+      <div style="text-align: center">
+        <vue-qr class="vue-qr" :text="payObj.payUrl" :size="200"></vue-qr>
+        <div>
+          请使用支付宝扫码支付
+        </div>
+      </div>
+    </el-dialog>
+    <!--支付宝支付二维码模态框结束-->
   </div>
 </template>
 
 <script>
 // 引入处方收费api
-import { queryAllOrderChargeForPage, queryOrderChargeItemByOrderId, payWithCase, payWithZfb } from '@/api/doctor/charge/charge'
+import {
+  queryAllOrderChargeForPage,
+  queryOrderChargeItemByOrderId,
+  payWithCash,
+  payWithZfb,
+  queryOrderChargeByOrderId
+} from '@/api/doctor/charge/charge'
+import vueQr from 'vue-qr'
+
 export default {
   name: 'ChargeList',
+  components: {
+    vueQr
+  },
   data() {
     return {
       // 是否启用遮罩层,请求后台时出现进度条(如果请求响应很快的话,可能看不到)
@@ -155,7 +193,15 @@ export default {
       itemTypeOptions: [],
       // 支付详情状态
       itemStatusOptions: [],
-      itemLoading: false
+      itemLoading: false,
+      // 支付对象（创建支付宝订单返回数据）
+      payObj: {},
+      // 支付宝二维码模态框标题
+      title: '',
+      // 支付宝二维码模态框可见
+      openPay: false,
+      // 定时轮询
+      intervalObj: undefined
     }
   },
   // 生命周期,钩子函数  在实例创建完成后被立即调用
@@ -259,12 +305,78 @@ export default {
     // 详情页关闭
     closeModel() {
       this.openDetail = false
+      this.chargeItemTableList = []
     },
     // 现金收费
     handlePayWithCase(row) {
+      // 发送请求
+      this.loading = true
+      this.$confirm('是否确定进行现金支付?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        payWithCash(row.orderId).then(res => {
+          this.msgSuccess('现金支付成功')
+          this.loading = false
+          // 重新查询列表
+          this.getChargeList()
+        }).catch(() => {
+          this.msgError('现金支付失败')
+          this.loading = false
+        })
+      }).catch(() => {
+        this.msgError('现金支付取消')
+        this.loading = false
+      })
     },
     // 支付宝收费
     handlePayWithZfb(row) {
+      // 发送请求
+      this.loading = true
+      this.$confirm('是否确定进行支付宝支付?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        payWithZfb(row.orderId).then(res => {
+          this.loading = false
+          // 1. 从返回数据中生成二维码,进行支付，会自动调用回调请求
+          this.payObj = res.data
+          this.openPay = true
+          this.title = '请使用支付宝扫码支付'
+          const tx = this // 层数套太多容易有问题
+          // 2. 定时发送查询该订单的装填，如果支付成功，继续执行，否则抛出提示信息
+          tx.intervalObj = setInterval(function() {
+            // 根据订单id查询订单信息，看是否已经支付完成
+            queryOrderChargeByOrderId(tx.payObj.orderId).then(res => {
+              if (res.data.orderStatus === '1') {
+                // 支付成功
+                // 清空定时器
+                clearInterval(tx.intervalObj)
+                tx.$notify({
+                  title: '支付成功',
+                  message: '[' + tx.payObj.orderId + ']对应的订单支付成功',
+                  type: 'success'
+                })
+                // 重新查询列表
+                tx.getChargeList()
+                // 关闭模态框
+                tx.openPay = false
+              }
+            }).catch(() => {
+              // 清空定时器
+              clearInterval(this.intervalObj)
+            })
+          }, 2000)
+        }).catch(() => {
+          this.msgError('支付宝支付失败')
+          this.loading = false
+        })
+      }).catch(() => {
+        this.msgInfo('支付宝支付取消')
+        this.loading = false
+      })
     }
   }
 }
