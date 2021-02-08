@@ -37,7 +37,7 @@
           label:列名
           show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
         -->
-        <el-table-column label="支付订单号" prop="orderId" align="center" />
+        <el-table-column label="支付订单号" prop="orderId" align="center" width="220"/>
         <el-table-column label="挂号单号" prop="registrationId" align="center"/>
         <el-table-column label="患者姓名" prop="patientName" align="center"/>
         <el-table-column label="订单总金额" prop="orderAmount" align="center">
@@ -82,6 +82,41 @@
       @current-change="handleCurrentChange"
     />
     <!--底部分页结束-->
+    <!--查看详情页面开始-->
+    <el-dialog
+      v-loading="loading"
+      :title="title"
+      :visible.sync="openDetail"
+      width="1200px"
+      center
+      append-to-body
+      >
+      <el-table v-loading="itemLoading" border :data="chargeItemTableList">
+        <!--el-table-column:每一行中的每一列
+          prop:对应从:data中取出的数据
+          align:对齐方式
+          label:列名
+          show-overflow-tooltip:默认情况下数据过长不够显示的时候是换行显示,如果需要单行显示,可以使用这个,并且当鼠标移动到此处时会显示实际内容的提示信息
+        -->
+        <el-table-column label="详情Id" prop="itemId" align="center" width="210"/>
+        <el-table-column label="处方Id" prop="coId" align="center" width="210"/>
+        <el-table-column label="名称" prop="itemName" align="center"/>
+        <el-table-column label="价格" prop="itemPrice" align="center">
+          <template slot-scope="scope">
+            {{scope.row.itemPrice}}元
+          </template>
+        </el-table-column>
+        <el-table-column label="数量" prop="itemNum" align="center"/>
+        <el-table-column label="金额" prop="itemAmount" align="center">
+          <template slot-scope="scope">
+            {{scope.row.itemAmount}}元
+          </template>
+        </el-table-column>
+        <el-table-column label="类型" prop="itemType" align="center" :formatter="itemTypeFormatter"/>
+        <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter"/>
+      </el-table>
+    </el-dialog>
+    <!--查看详情页面结束-->
   </div>
 </template>
 
@@ -109,7 +144,18 @@ export default {
       // 支付类型数据
       payTypeOptions: [],
       // 订单状态数据
-      orderStatusOptions: []
+      orderStatusOptions: [],
+      // 查看详情模态框标题
+      title: '',
+      // 是否打开模态框
+      openDetail: false,
+      // 支付详情列表数据
+      chargeItemTableList: [],
+      // 支付详情类型
+      itemTypeOptions: [],
+      // 支付详情状态
+      itemStatusOptions: [],
+      itemLoading: false
     }
   },
   // 生命周期,钩子函数  在实例创建完成后被立即调用
@@ -122,6 +168,14 @@ export default {
     this.getDataByType('his_pay_type_status').then(res => {
       // 将查询到的状态信息保存到当前页面对应的属性中
       this.payTypeOptions = res.data
+    })
+    this.getDataByType('his_item_type').then(res => {
+      // 将查询到的状态信息保存到当前页面对应的属性中
+      this.itemTypeOptions = res.data
+    })
+    this.getDataByType('his_order_details_status').then(res => {
+      // 将查询到的状态信息保存到当前页面对应的属性中
+      this.itemStatusOptions = res.data
     })
     // 最后查询列表
     // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
@@ -141,6 +195,8 @@ export default {
         // 查询到数据了,就要显示分页了
         this.total = res.total
         // 关闭遮罩
+        this.loading = false
+      }).catch(() => {
         this.loading = false
       })
     },
@@ -178,8 +234,31 @@ export default {
     orderStatusFormatter(row) {
       return this.transferDictCode(this.orderStatusOptions, row.orderStatus)
     },
+    itemTypeFormatter(row) {
+      return this.transferDictCode(this.itemTypeOptions, row.itemType)
+    },
+    statusFormatter(row) {
+      return this.transferDictCode(this.itemStatusOptions, row.status)
+    },
     // 查看详情
     handleView(row) {
+      this.openDetail = true
+      this.title = '查看' + row.patientName + '的支付订单详情'
+      this.itemLoading = true
+      // 根据orderId查询对应详情信息
+      queryOrderChargeItemByOrderId(row.orderId).then(res => {
+        // 将分页数据传递给数据类表绑定的data数据
+        this.chargeItemTableList = res.data
+        // 关闭遮罩
+        this.itemLoading = false
+      }).catch(() => {
+        this.msgError('加载详情数据失败')
+        this.itemLoading = false
+      })
+    },
+    // 详情页关闭
+    closeModel() {
+      this.openDetail = false
     },
     // 现金收费
     handlePayWithCase(row) {
