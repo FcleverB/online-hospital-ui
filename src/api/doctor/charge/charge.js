@@ -34,3 +34,36 @@ export function queryOrderChargeByOrderId(orderId) {
     method: 'get'
   })
 }
+
+// 分页查询所有支付订单信息
+export function queryAllOrderChargeForPage(query) {
+  return request({
+    url: '/doctor/charge/queryAllOrderChargeForPage',
+    method: 'get',
+    params: query
+  })
+}
+
+// 根据支付订单主表id查询对应支付详情信息
+export function queryOrderChargeItemByOrderId(orderId) {
+  return request({
+    url: '/doctor/charge/queryOrderChargeItemByOrderId/' + orderId,
+    method: 'get'
+  })
+}
+
+// 收费查询列表中现金支付
+export function payWithCase(orderId) {
+  return request({
+    url: '/doctor/charge/payWithCase/' + orderId,
+    method: 'get'
+  })
+}
+
+// 收费查询列表中支付宝支付
+export function payWithZfb(orderId) {
+  return request({
+    url: '/doctor/charge/payWithZfb/' + orderId,
+    method: 'get'
+  })
+}
