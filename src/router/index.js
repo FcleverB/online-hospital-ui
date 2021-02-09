@@ -282,7 +282,7 @@ export const asyncRoutes = [
       },
       {
         path: 'backfee',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/doctor/backfee/index'),
         name: '/charge/backfee',
         meta: { title: '处方退费', icon: 'list' }
       },
