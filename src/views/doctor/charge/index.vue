@@ -183,6 +183,7 @@ export default {
         this.msgError('请输入挂号单据id后再执行查询操作！')
         // 清空数据
         this.resetCurrentParams()
+        this.itemObjs = []
         return
       }
       this.loading = true
@@ -281,6 +282,8 @@ export default {
             }).catch(() => {
               this.loading = false
             })
+          }).catch(() => {
+            this.loading = false
           })
         }).catch(() => {
           this.msgError('创建订单并现金支付失败')
@@ -367,6 +370,8 @@ export default {
                   tx.careOrders.filter((item, index) => {
                     tx.activeNames.push(index)
                   })
+                }).catch(() => {
+                  this.loading = false
                 })
               }
             }).catch(() => {

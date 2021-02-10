@@ -79,6 +79,7 @@
               <el-table-column label="数量" align="center" prop="num" />
               <el-table-column label="单价(元)" align="center" prop="price" />
               <el-table-column label="金额(元)" align="center" prop="amount" />
+              <el-table-column label="支付类型" align="center" prop="payType" :formatter="payTypeFormatter"/>
               <el-table-column label="备注" align="center" prop="remark" />
               <el-table-column label="状态" align="center" prop="status" :formatter="statusFormatter" />
             </el-table>
@@ -92,7 +93,7 @@
 </template>
 
 <script>
-import { getChargedAllCareByRegistrationId } from '@/api/doctor/backfee/backfee'
+import { getChargedAllCareByRegistrationId, createOrderBackfeeWithCash } from '@/api/doctor/backfee/backfee'
 
 export default {
   name: 'Index',
@@ -126,13 +127,18 @@ export default {
       // 当前选中的所有项目集合
       itemObjs: [],
       // 处方折叠面板展开的名字
-      activeNames: []
+      activeNames: [],
+      // 支付类型码表
+      payTypeOptions: []
     }
   },
   created() {
     // 查询处方详情的字典数据
     this.getDataByType('his_order_details_status').then(res => {
       this.statusOptions = res.data
+    })
+    this.getDataByType('his_pay_type_status').then(res => {
+      this.payTypeOptions = res.data
     })
   },
   methods: {
@@ -143,6 +149,7 @@ export default {
         this.msgError('请输入挂号单据id后再执行查询操作！')
         // 清空数据
         this.resetCurrentParams()
+        this.itemObjs = []
         return
       }
       this.loading = true
@@ -192,16 +199,16 @@ export default {
         return
       }
       // 组装数据
-      const orderChargeObj = {
+      const orderBackfeeObj = {
         // 退费订单信息主表
-        orderChargeDto: {
-          orderAmount: this.allAmount, // 总金额
+        orderBackfeeDto: {
+          backAmount: this.allAmount, // 总金额
           chId: this.careHistory.chId, // 病历id
           registrationId: this.careHistory.registrationId, // 挂号单据id
           patientName: this.careHistory.patientName
         },
         // 退费订单详细信息子表
-        orderChargeItemDtoList: []
+        orderBackfeeItemDtoList: []
       }
       this.itemObjs.filter(item => {
         const obj = {
@@ -213,7 +220,7 @@ export default {
           itemType: item.itemType,
           itemAmount: item.amount
         }
-        orderChargeObj.orderChargeItemDtoList.push(obj)
+        orderBackfeeObj.orderBackfeeItemDtoList.push(obj)
       })
       // 发送请求
       this.loading = true
@@ -224,55 +231,38 @@ export default {
         type: 'warning'
       }).then(() => {
         // 发送现金退费请求，请求成功时重新查询剩余已支付订单
+        createOrderBackfeeWithCash(orderBackfeeObj).then(res => {
+          this.msgSuccess('创建订单并现金退费成功')
+          // 清空原有数据
+          this.resetCurrentParams()
+          // 这里应该重新查询一下，显示剩余未支付的处方内容
+          getChargedAllCareByRegistrationId(this.queryParams.registrationId).then(res => {
+            this.careHistory = res.data.careHistory
+            this.careOrders = res.data.careOrders
+            this.loading = false
+            this.allAmount = 0.00
+            this.itemObjs = []
+            this.loadingText = ''
+            // 动态设置折叠面板的展示数量
+            this.careOrders.filter((item, index) => {
+              this.activeNames.push(index)
+            }).catch(() => {
+              this.loading = false
+            })
+          }).catch(() => {
+            this.loading = false
+          })
+        }).catch(() => {
+          this.msgError('创建订单并现金退费失败')
+          this.loading = false
+        })
       }).catch(() => {
-        this.msgError('创建订单并现金退费取消')
+        this.msgInfo('创建订单并现金退费取消')
         this.loading = false
       })
     },
     // 支付宝退费
     handleBackWithAliPay() {
-      // 判断是否有勾选处方详情
-      if (this.itemObjs.length === 0) {
-        this.msgInfo('未选择要退费的处方详情信息，请选择后再退费！')
-        return
-      }
-      // 组装数据
-      const orderChargeObj = {
-        // 退费订单信息主表
-        orderChargeDto: {
-          orderAmount: this.allAmount, // 总金额
-          chId: this.careHistory.chId, // 病历id
-          registrationId: this.careHistory.registrationId, // 挂号单据id
-          patientName: this.careHistory.patientName
-        },
-        // 退费订单详细信息子表
-        orderChargeItemDtoList: []
-      }
-      this.itemObjs.filter(item => {
-        const obj = {
-          itemId: item.itemId,
-          coId: item.coId,
-          itemName: item.itemName,
-          itemPrice: item.price,
-          itemNum: item.num,
-          itemType: item.itemType,
-          itemAmount: item.amount
-        }
-        orderChargeObj.orderChargeItemDtoList.push(obj)
-      })
-      // 发送请求
-      this.loading = true
-      this.loadingText = '创建订单并支付宝退费中'
-      this.$confirm('是否确定创建订单并支付宝退费?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        // 发送支付宝退费请求，请求成功时重新查询剩余已支付订单
-      }).catch(() => {
-        this.msgError('创建订单并支付宝退费取消')
-        this.loading = false
-      })
     },
     resetCurrentParams() {
       this.careHistory = {}
@@ -315,6 +305,9 @@ export default {
     // 翻译处方详情状态
     statusFormatter(row) {
       return this.transferDictCode(this.statusOptions, row.status)
+    },
+    payTypeFormatter(row) {
+      return this.transferDictCode(this.payTypeOptions, row.payType)
     },
     tableRowClassName({ row, rowIndex }) {
       row.index = rowIndex

@@ -124,6 +124,7 @@
       :visible.sync="openPay"
       center
       :close-on-click-modal="false"
+      :before-close="handleClose"
       append-to-body
     >
       <el-form label-position="left" label-width="120px" inline class="demo-table-expand">
@@ -196,8 +197,6 @@ export default {
       itemLoading: false,
       // 支付对象（创建支付宝订单返回数据）
       payObj: {},
-      // 支付宝二维码模态框标题
-      title: '',
       // 支付宝二维码模态框可见
       openPay: false,
       // 定时轮询
@@ -366,7 +365,7 @@ export default {
               }
             }).catch(() => {
               // 清空定时器
-              clearInterval(this.intervalObj)
+              clearInterval(tx.intervalObj)
             })
           }, 2000)
         }).catch(() => {
@@ -377,6 +376,12 @@ export default {
         this.msgInfo('支付宝支付取消')
         this.loading = false
       })
+    },
+    // 支付宝收费页面关闭触发
+    handleClose() {
+      this.openPay = false
+      // 关闭轮询
+      clearInterval(this.intervalObj)
     }
   }
 }

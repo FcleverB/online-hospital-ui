@@ -9,3 +9,11 @@ export function getChargedAllCareByRegistrationId(registrationId) {
   })
 }
 
+// 创建退费订单并现金退费
+export function createOrderBackfeeWithCash(data) {
+  return request({
+    url: '/doctor/backfee/createOrderBackfeeWithCash',
+    method: 'post',
+    data: data
+  })
+}
