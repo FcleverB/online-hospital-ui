@@ -17,3 +17,12 @@ export function createOrderBackfeeWithCash(data) {
     data: data
   })
 }
+
+// 创建退费订单并支付宝退费
+export function createOrderBackfeeWithZfb(data) {
+  return request({
+    url: '/doctor/backfee/createOrderBackfeeWithZfb',
+    method: 'post',
+    data: data
+  })
+}

@@ -7,7 +7,7 @@ import { getToken } from '@/utils/auth'
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // 实际发送的URL=baseURL  +  请求配置的url  （baseURL当前就是/dev-api
   // withCredentials: true, // send cookies when cross-domain requests
-  timeout: 5000 // 设置请求超时时间
+  timeout: 50000 // 设置请求超时时间
 })
 
 // 请求拦截器

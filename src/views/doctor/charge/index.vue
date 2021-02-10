@@ -183,13 +183,13 @@ export default {
         this.msgError('请输入挂号单据id后再执行查询操作！')
         // 清空数据
         this.resetCurrentParams()
-        this.itemObjs = []
         return
       }
       this.loading = true
       this.loadingText = '数据查询中，请稍后......'
       // 清空原有数据
       this.resetCurrentParams()
+      this.itemObjs = []
       // 调用api执行查询操作
       getNoChargeAllCareByRegistrationId(registrationId).then(res => {
         this.careHistory = res.data.careHistory
