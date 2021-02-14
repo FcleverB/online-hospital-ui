@@ -26,3 +26,20 @@ export function createOrderBackfeeWithZfb(data) {
     data: data
   })
 }
+
+// 分页查询所有退费订单
+export function queryAllOrderBackfeeForPage(query) {
+  return request({
+    url: '/doctor/backfee/queryAllOrderBackfeeForPage',
+    method: 'get',
+    params: query
+  })
+}
+
+// 根据退费单主表id查询对应详情信息
+export function queryOrderBackfeeItemByBackId(backId) {
+  return request({
+    url: '/doctor/backfee/queryOrderBackfeeItemByBackId/' + backId,
+    method: 'get'
+  })
+}

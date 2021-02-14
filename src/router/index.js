@@ -288,7 +288,7 @@ export const asyncRoutes = [
       },
       {
         path: 'backfeelist',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/doctor/backfee/backFeeList'),
         name: '/charge/backfeelist',
         meta: { title: '退费查询', icon: 'list' }
       },
