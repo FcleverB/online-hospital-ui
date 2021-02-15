@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import { doMedicine, getChargedCareHistoryOnlyMedicinesByRegistrationId } from '@/api/doctor/handleMedicines'
+import { doMedicine, getChargedCareHistoryOnlyMedicinesByRegistrationId } from '@/api/doctor/handleMedicines/handleMedicines'
 
 export default {
   name: 'Index',

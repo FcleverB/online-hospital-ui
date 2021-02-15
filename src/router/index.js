@@ -313,7 +313,7 @@ export const asyncRoutes = [
     children: [
       {
         path: 'docheck',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/doctor/checkResult/index'),
         name: '/check/docheck',
         meta: { title: '新开检查', icon: 'list' }
       },
