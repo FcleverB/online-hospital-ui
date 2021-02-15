@@ -9,3 +9,11 @@ export function queryNeedCheckItem(query) {
     data: query
   })
 }
+
+// 根据详情Id查询对应病历|处方|处方详情
+export function queryCheckItemByItemId(itemId) {
+  return request({
+    url: '/doctor/check/queryCheckItemByItemId/' + itemId,
+    method: 'get'
+  })
+}

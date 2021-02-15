@@ -55,16 +55,16 @@
     <el-card class="box-card" v-if="currentRow != null">
       <el-form label-position="left" label-width="120px" inline class="demo-table-expand">
         <el-form-item label="挂号单号：">
-          <span>1</span>
+          <span>{{ this.careHistory.registrationId }}</span>
         </el-form-item>
         <el-form-item label="患者姓名：">
-          <span>1</span>
+          <span>{{ this.careHistory.patientName }}</span>
         </el-form-item>
         <el-form-item label="处方Id：">
-          <span>1</span>
+          <span>{{ this.careOrder.coId }}</span>
         </el-form-item>
         <el-form-item label="创建时间：">
-          <span>1</span>
+          <span>{{ this.careOrderItem.createTime }}</span>
         </el-form-item>
         <el-button type="primary" style="width: 100%" icon="el-icon-plus">开始检查</el-button>
       </el-form>
@@ -75,7 +75,7 @@
 
 <script>
 import { selectAllCheckItem } from '@/api/system/checkItem/checkItem'
-import { queryNeedCheckItem } from '@/api/doctor/checkResult/checkResult'
+import { queryNeedCheckItem, queryCheckItemByItemId } from '@/api/doctor/checkResult/checkResult'
 
 export default {
   name: 'Index',
@@ -99,7 +99,13 @@ export default {
       // 支付详情状态
       itemStatusOptions: [],
       // 数据表格当前选中行
-      currentRow: null
+      currentRow: null,
+      // 详情对应的病历信息
+      careHistory: {},
+      // 详情对应的处方信息
+      careOrder: {},
+      // 详情的全部信息
+      careOrderItem: {}
     }
   },
   created() {
@@ -159,6 +165,13 @@ export default {
     // 数据表格选中触发
     handleCurrentChange(val) {
       this.currentRow = val
+      if (this.currentRow != null) {
+        queryCheckItemByItemId(this.currentRow.itemId).then(res => {
+          this.careHistory = res.data.careHistory
+          this.careOrder = res.data.careOrder
+          this.careOrderItem = res.data.careOrderItem
+        })
+      }
     }
   }
 }
