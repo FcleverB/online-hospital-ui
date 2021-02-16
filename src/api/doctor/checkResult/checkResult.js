@@ -34,3 +34,12 @@ export function queryAllCheckingResultForPage(data) {
     data: data
   })
 }
+
+// 完成检查
+export function completeCheckResult(data) {
+  return request({
+    url: '/doctor/check/completeCheckResult',
+    method: 'post',
+    data: data
+  })
+}

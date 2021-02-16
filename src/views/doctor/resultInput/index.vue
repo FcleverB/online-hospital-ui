@@ -5,17 +5,17 @@
     <el-form ref="queryForm" label-width="88px" inline :model="queryParams">
       <!--prop：如果设置了rule，则会匹配prop来进行验证-->
       <el-form-item label="挂号单据id" prop="registrationId">
-        <el-input v-model="queryParams.registrationId" type="text" size="small" clearable style="width: 300px" placeholder="请输入挂号单据id"></el-input>
+        <el-input v-model="queryParams.registrationId" type="text" size="small" clearable style="width: 300px" placeholder="请输入挂号单据id" />
       </el-form-item>
       <el-form-item label="患者姓名" prop="patientName">
-        <el-input v-model="queryParams.patientName" type="text" size="small" clearable style="width: 300px" placeholder="请输入患者姓名"></el-input>
+        <el-input v-model="queryParams.patientName" type="text" size="small" clearable style="width: 300px" placeholder="请输入患者姓名" />
       </el-form-item>
       <el-form-item label="检查项目" prop="checkItemIds">
-        <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
-        <div style="margin: 15px 0;"></div>
+        <el-checkbox v-model="checkAll" :indeterminate="isIndeterminate" @change="handleCheckAllChange">全选</el-checkbox>
+        <div style="margin: 15px 0;" />
         <el-checkbox-group v-model="queryParams.checkItemIds" @change="handleCheckItemChange">
-          <el-checkbox v-for="checkItem in checkItemOptions" :label="checkItem.checkItemId" :key="checkItem.checkItemId">
-            {{checkItem.checkItemName}}
+          <el-checkbox v-for="checkItem in checkItemOptions" :key="checkItem.checkItemId" :label="checkItem.checkItemId">
+            {{ checkItem.checkItemName }}
           </el-checkbox>
         </el-checkbox-group>
       </el-form-item>
@@ -52,11 +52,11 @@
         </template>
       </el-table-column>
       <el-table-column label="检查单号" prop="itemId" align="center" />
-      <el-table-column label="挂号单号" prop="registrationId" align="center"/>
-      <el-table-column label="检查项目名称" prop="checkItemName" align="center"/>
-      <el-table-column label="患者姓名" prop="patientName" width="250px" align="center"/>
-      <el-table-column label="价格（元）" prop="price" width="250px" align="center"/>
-      <el-table-column label="创建时间" prop="createTime" width="250px" align="center"/>
+      <el-table-column label="挂号单号" prop="registrationId" align="center" />
+      <el-table-column label="检查项目名称" prop="checkItemName" align="center" />
+      <el-table-column label="患者姓名" prop="patientName" width="250px" align="center" />
+      <el-table-column label="价格（元）" prop="price" width="250px" align="center" />
+      <el-table-column label="创建时间" prop="createTime" width="250px" align="center" />
       <el-table-column label="操作" align="center">
         <!--slot-scope="scope" 取到当前单元格-->
         <template slot-scope="scope">
@@ -88,12 +88,55 @@
       @current-change="handleCurrentChange"
     />
     <!--底部分页结束-->
+    <!--检查结果录入模态框开始-->
+    <el-dialog
+      :title="title"
+      :visible.sync="open"
+      center
+      close-on-click-modal
+      append-to-body
+      width="1000px"
+    >
+      <el-form ref="form" :model="form" label-width="120px">
+        <el-form-item label="检查结果" prop="resultMsg">
+          <el-input
+            v-model="form.resultMsg"
+            type="textarea"
+            :autosize="{ minRows: 2, maxRows: 4}"
+            placeholder="请输入检查结果"
+          />
+        </el-form-item>
+        <el-form-item label="检查附件上传">
+          <!--传递到后台的对象名称 name="mf"-->
+          <el-upload
+            :action="uploadPath"
+            :headers="header"
+            :on-remove="handleRemove"
+            :file-list="fileList"
+            list-type="picture"
+            name="mf"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+          >
+            <el-button size="small" type="primary">上传结果</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传jpeg/png/bmp文件，且不超过500kb</div>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleSubmit">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </span>
+    </el-dialog>
+    <!--检查结果录入模态框结束-->
   </div>
 </template>
 
 <script>
-import { queryAllCheckingResultForPage } from '@/api/doctor/checkResult/checkResult'
+import { queryAllCheckingResultForPage, completeCheckResult } from '@/api/doctor/checkResult/checkResult'
 import { selectAllCheckItem } from '@/api/system/checkItem/checkItem'
+import { getToken } from '@/utils/auth'
+
 export default {
   name: 'ResultInput',
   data() {
@@ -122,7 +165,21 @@ export default {
       // 是否为半选状态
       isIndeterminate: false,
       // 是否全选
-      checkAll: false
+      checkAll: false,
+      // 完成检查时需要提交的数据
+      form: {
+        itemId: undefined,
+        resultMsg: undefined,
+        resultImg: undefined
+      },
+      // 上传路径
+      uploadPath: undefined,
+      // 上传文件列表
+      fileList: [],
+      // header 传递token，避免后端出现Shiro拦截
+      header: undefined,
+      // 保存上传文件的json对象，传递到后台保存在数据库
+      fileListJson: []
     }
   },
   // 生命周期,钩子函数  在实例创建完成后被立即调用
@@ -134,6 +191,10 @@ export default {
     // 最后查询列表
     // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
     this.getCheckingList()
+    // 文件上传的路径
+    this.uploadPath = process.env.VUE_APP_BASE_API + '/system/upload/doUploadImage'
+    // 设置请求头加入token，避免未认证问题
+    this.header = { 'token': getToken() }
   },
   methods: {
     // 查询数据列表数据
@@ -196,7 +257,52 @@ export default {
       this.isIndeterminate = checkedCount > 0 && checkedCount < this.checkItemOptions.length
     },
     // 录入检查结果
-    completeCheckResult() {
+    completeCheckResult(row) {
+      this.title = '录入【' + row.patientName + '】检查结果'
+      this.open = true
+      // 重置表单
+      this.form = {
+        itemId: undefined,
+        resultMsg: undefined,
+        resultImg: undefined
+      }
+      this.form.itemId = row.itemId
+    },
+    // 完成检查
+    handleSubmit() {
+      this.form.resultImg = JSON.stringify(this.fileListJson)
+      completeCheckResult(this.form).then(res => {
+        this.msgSuccess('录入结果成功')
+        this.open = false
+        // 重新查询
+        this.getCheckingList()
+      }).catch(() => {
+        this.open = false
+        this.msgError('录入结果失败')
+      })
+    },
+    // 模态框  取消按钮
+    cancel() {
+      // 设置open为false,表示关闭模态框
+      this.open = false
+      this.msgInfo('取消录入结果操作')
+    },
+    // 上传文件删除
+    handleRemove(file, fileList) {
+      // 根据删除的文件的url进行匹配，如果匹配到就从JSON对象中删除掉
+      this.fileListJson.filter(item => {
+        if (file.response.data.url === item.url) {
+          this.fileListJson.splice(item, 1)
+        }
+      })
+    },
+    // 上传成功回调
+    handleUploadSuccess(response, file, fileList) {
+      this.fileListJson.push(response.data)
+    },
+    // 上传失败回调
+    handleUploadError(err, file, fileList) {
+      this.msgError('上传失败')
     }
   }
 }
