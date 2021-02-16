@@ -17,3 +17,20 @@ export function queryCheckItemByItemId(itemId) {
     method: 'get'
   })
 }
+
+// 开始检查
+export function startCheck(itemId) {
+  return request({
+    url: '/doctor/check/startCheck/' + itemId,
+    method: 'post'
+  })
+}
+
+// 查询所有检查中的项目
+export function queryAllCheckingResultForPage(data) {
+  return request({
+    url: '/doctor/check/queryAllCheckingResultForPage',
+    method: 'post',
+    data: data
+  })
+}

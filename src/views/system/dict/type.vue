@@ -383,6 +383,8 @@ export default {
         this.loading = false
         // 显示提示信息
         this.msgSuccess('缓存同步成功')
+        // 重新查询列表
+        this.getDictTypeList()
       })
     },
     // 改变数据列表第一列多选框选中状态所触发的方法,selection为选择的内容

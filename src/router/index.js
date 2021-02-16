@@ -319,7 +319,7 @@ export const asyncRoutes = [
       },
       {
         path: 'checkresult',
-        component: () => import('@/views/error-page/404'),
+        component: () => import('@/views/doctor/resultInput/index'),
         name: '/check/checkresult',
         meta: { title: '检查结果录入', icon: 'list' }
       },

@@ -66,7 +66,7 @@
         <el-form-item label="创建时间：">
           <span>{{ this.careOrderItem.createTime }}</span>
         </el-form-item>
-        <el-button type="primary" style="width: 100%" icon="el-icon-plus">开始检查</el-button>
+        <el-button type="primary" style="width: 100%" icon="el-icon-plus" @click="startCheck">开始检查</el-button>
       </el-form>
     </el-card>
     <!--检查栏目结束-->
@@ -75,7 +75,7 @@
 
 <script>
 import { selectAllCheckItem } from '@/api/system/checkItem/checkItem'
-import { queryNeedCheckItem, queryCheckItemByItemId } from '@/api/doctor/checkResult/checkResult'
+import { queryNeedCheckItem, queryCheckItemByItemId, startCheck } from '@/api/doctor/checkResult/checkResult'
 
 export default {
   name: 'Index',
@@ -143,6 +143,7 @@ export default {
       // 清空查询数据
       this.resetForm('queryForm')
       this.checkAll = false
+      this.isIndeterminate = false
       // 重新查询数据列表,相当于执行一次无查询条件的查询操作,如果不调用这个方法,那么清空操作后,数据列表不会同步改变
       this.getCheckItemList()
     },
@@ -172,6 +173,27 @@ export default {
           this.careOrderItem = res.data.careOrderItem
         })
       }
+    },
+    // 开始检查
+    startCheck() {
+      this.$confirm('确定要开始检查吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 调用api执行删除操作
+        startCheck(this.currentRow.itemId).then(res => {
+          // 操作成功提示
+          this.msgSuccess('开始检查成功')
+          // 重新查询数据列表
+          this.getCheckItemList()
+        })
+      }).catch(() => {
+        // 关闭遮罩
+        this.loading = false
+        // 操作失败提示
+        this.msgInfo('取消开始检查操作')
+      })
     }
   }
 }
