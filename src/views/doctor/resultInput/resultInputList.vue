@@ -61,7 +61,7 @@
         <!--slot-scope="scope" 取到当前单元格-->
         <template slot-scope="scope">
           <!--传递该条数据到具体处理方法中-->
-          <el-button type="text" icon="el-icon-edit" size="mini" @click="completeCheckResult(scope.row)">录入检查结果</el-button>
+          <el-button v-if="scope.row.resultStatus === '1'" type="text" icon="el-icon-view" size="mini"  @click="lookDetail(scope.row)">查看详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -97,36 +97,28 @@
       append-to-body
       width="1000px"
     >
-      <el-form ref="form" :model="form" label-width="120px">
+      <el-form ref="form" label-width="120px">
         <el-form-item label="检查结果" prop="resultMsg">
-          <el-input
-            v-model="form.resultMsg"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 4}"
-            placeholder="请输入检查结果"
-          />
+          {{ currentResult.resultMsg }}
         </el-form-item>
         <el-form-item label="检查附件上传">
+<!--          <div v-for="(item,index) in currentResult.resultImg" :key="index">-->
+<!--            <img :src="item.url" />-->
+<!--          </div>-->
           <!--传递到后台的对象名称 name="mf"-->
           <el-upload
             :action="uploadPath"
-            :headers="header"
-            :on-remove="handleRemove"
+            disabled
+            :file-list="currentResult.resultImg"
             :on-preview="handlePictureCardPreview"
-            :file-list="fileList"
             list-type="picture"
             name="mf"
-            :on-success="handleUploadSuccess"
-            :on-error="handleUploadError"
           >
-            <el-button size="small" type="primary">上传结果</el-button>
-            <div slot="tip" class="el-upload__tip">只能上传jpeg/png/bmp文件，且不超过500kb</div>
           </el-upload>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="handleSubmit">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
+        <el-button type="primary" @click="handleClose">关 闭</el-button>
       </span>
     </el-dialog>
     <!--检查结果录入模态框结束-->
@@ -139,9 +131,8 @@
 </template>
 
 <script>
-import { queryAllCheckingResultForPage, completeCheckResult } from '@/api/doctor/checkResult/checkResult'
+import { queryAllCheckResultForPage } from '@/api/doctor/checkResult/checkResult'
 import { selectAllCheckItem } from '@/api/system/checkItem/checkItem'
-import { getToken } from '@/utils/auth'
 
 export default {
   name: 'ResultInput',
@@ -172,24 +163,17 @@ export default {
       isIndeterminate: false,
       // 是否全选
       checkAll: false,
-      // 完成检查时需要提交的数据
-      form: {
-        itemId: undefined,
+      // 详情数据
+      currentResult: {
         resultMsg: undefined,
-        resultImg: undefined
+        resultImg: []
       },
-      // 上传路径
-      uploadPath: undefined,
-      // 上传文件列表
-      fileList: [],
-      // header 传递token，避免后端出现Shiro拦截
-      header: undefined,
-      // 保存上传文件的json对象，传递到后台保存在数据库
-      fileListJson: [],
       // 预览URL
       dialogImageUrl: undefined,
       // 是否显示预览模态框
-      dialogVisible: false
+      dialogVisible: false,
+      // 上传路径
+      uploadPath: undefined,
     }
   },
   // 生命周期,钩子函数  在实例创建完成后被立即调用
@@ -200,21 +184,19 @@ export default {
     })
     // 最后查询列表
     // 加载页面时,需要进行初始化数据,调用查询数据列表的方法
-    this.getCheckingList()
+    this.getCheckList()
     // 文件上传的路径
     this.uploadPath = process.env.VUE_APP_BASE_API + '/system/upload/doUploadImage'
-    // 设置请求头加入token，避免未认证问题
-    this.header = { 'token': getToken() }
   },
   methods: {
     // 查询数据列表数据
-    getCheckingList() {
+    getCheckList() {
       // 打开遮罩
       this.loading = true
       // 调用分页查询的api方法
       // listForPage(this.queryParams).then(res => {
       // 通过addDateRange封装起始时间和结束时间
-      queryAllCheckingResultForPage(this.queryParams).then(res => {
+      queryAllCheckResultForPage(this.queryParams).then(res => {
         // 将分页数据传递给数据类表绑定的data数据
         this.checkResultTableList = res.data
         // 查询到数据了,就要显示分页了
@@ -228,7 +210,7 @@ export default {
     handleQuery() {
       // 执行实际的查询方法
       // 因为输入的查询条件实时与queryParams动态绑定
-      this.getCheckingList()
+      this.getCheckList()
     },
     // 清空查询条件操作
     resetQuery() {
@@ -237,21 +219,21 @@ export default {
       this.checkAll = false
       this.isIndeterminate = false
       // 重新查询数据列表,相当于执行一次无查询条件的查询操作,如果不调用这个方法,那么清空操作后,数据列表不会同步改变
-      this.getCheckingList()
+      this.getCheckList()
     },
     // 改变每页显示条数的时候触发
     handleSizeChange(val) {
       // 更新每页显示条数
       this.queryParams.pageSize = val
       // 重新查询
-      this.getCheckingList()
+      this.getCheckList()
     },
     // 当前页改变时触发(前一页,点击某一页,下一页,跳转某一页)
     handleCurrentChange(val) {
       // 更新需要显示的第几页数
       this.queryParams.pageNum = val
       // 重新查询
-      this.getCheckingList()
+      this.getCheckList()
     },
     // 检查项目全选触发方法
     handleCheckAllChange(val) {
@@ -266,53 +248,25 @@ export default {
       // 选中数量大于0小于全部时，为半选状态
       this.isIndeterminate = checkedCount > 0 && checkedCount < this.checkItemOptions.length
     },
-    // 录入检查结果
-    completeCheckResult(row) {
-      this.title = '录入【' + row.patientName + '】检查结果'
+    // 查看结果
+    lookDetail(row) {
+      this.title = '查看【' + row.patientName + '】的检查结果'
       this.open = true
-      // 重置表单
-      this.form = {
-        itemId: undefined,
-        resultMsg: undefined,
-        resultImg: undefined
+      this.currentResult.resultMsg = row.resultMsg
+      if (row.resultImg !== '' || row.resultImg !== undefined) {
+        // json串转为JSON对象
+        this.currentResult.resultImg = JSON.parse(row.resultImg)
       }
-      this.form.itemId = row.itemId
-    },
-    // 完成检查
-    handleSubmit() {
-      this.form.resultImg = JSON.stringify(this.fileListJson)
-      completeCheckResult(this.form).then(res => {
-        this.msgSuccess('录入结果成功')
-        this.open = false
-        // 重新查询
-        this.getCheckingList()
-      }).catch(() => {
-        this.open = false
-        this.msgError('录入结果失败')
-      })
     },
     // 模态框  取消按钮
-    cancel() {
+    handleClose() {
       // 设置open为false,表示关闭模态框
       this.open = false
-      this.msgInfo('取消录入结果操作')
-    },
-    // 上传文件删除
-    handleRemove(file, fileList) {
-      // 根据删除的文件的url进行匹配，如果匹配到就从JSON对象中删除掉
-      this.fileListJson.filter(item => {
-        if (file.response.data.url === item.url) {
-          this.fileListJson.splice(item, 1)
-        }
-      })
-    },
-    // 上传成功回调
-    handleUploadSuccess(response, file, fileList) {
-      this.fileListJson.push(response.data)
-    },
-    // 上传失败回调
-    handleUploadError(err, file, fileList) {
-      this.msgError('上传失败')
+      // 重置
+      this.currentResult = {
+        resultMsg: undefined,
+        resultImg: []
+      }
     },
     // 文件预览
     handlePictureCardPreview(file) {
