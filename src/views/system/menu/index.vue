@@ -99,7 +99,6 @@
         </template>
       </el-table-column>
       <el-table-column label="路由路径" prop="path" align="center" ></el-table-column>
-      <el-table-column label="权限标识" prop="percode" align="center" ></el-table-column>
       <!--formatter:用于按照指定要求来格式化此处需要显示的值,显示在列表中的数据是经过statusFormatter处理后的内容-->
       <el-table-column label="状态" prop="status" align="center" :formatter="statusFormatter" />
       <el-table-column label="备注" prop="remark" align="center" width="180" />

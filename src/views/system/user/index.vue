@@ -183,8 +183,8 @@
         <template slot-scope="scope">
           <!--传递该条数据到具体处理方法中-->
           <el-button type="text" icon="el-icon-edit" size="mini" @click="handleUpdate(scope.row)">修改</el-button>
-          <el-button v-if="scope.row.userId != 1" type="text" icon="el-icon-delete" size="mini" @click="handleDelete(scope.row)">删除</el-button>
-          <el-button v-if="scope.row.userId != 1" type="text" icon="el-icon-refresh" size="mini" @click="handleAssign(scope.row)">分配角色</el-button>
+          <el-button type="text" icon="el-icon-delete" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+          <el-button type="text" icon="el-icon-refresh" size="mini" @click="handleAssign(scope.row)">分配角色</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -402,7 +402,7 @@
 // 引入科室管理api
 import { selectAllDept } from '@/api/system/dept/dept'
 // 引入用户管理相关api
-import { listUserForPage, addUser, updateUser, deleteUserByIds, getUserById, resetPassword,saveUserAndRole } from '@/api/system/user/user'
+import { listUserForPage, addUser, updateUser, deleteUserByIds, getUserById, resetPassword, saveUserAndRole } from '@/api/system/user/user'
 // 引入角色管理api，获取所有角色信息
 import { selectAllRoles, getRoleIdsByUserId } from '@/api/system/role/role'
 

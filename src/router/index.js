@@ -332,43 +332,43 @@ export const asyncRoutes = [
     ]
   },
   // 数据统计
-  {
-    path: '/statistics',
-    component: Layout,
-    redirect: 'noRedirect',
-    name: '/statistics',
-    meta: {
-      title: '数据统计',
-      icon: 'example'
-    },
-    children: [
-      {
-        path: 'revenue',
-        component: () => import('@/views/error-page/404'),
-        name: '/statistics/revenue',
-        meta: { title: '收支统计', icon: 'edit' }
-      },
-      {
-        path: 'sales',
-        component: () => import('@/views/error-page/404'),
-        name: '/statistics/sales',
-        meta: { title: '药品销售统计', icon: 'list' },
-        hidden: true
-      },
-      {
-        path: 'check',
-        component: () => import('@/views/error-page/404'),
-        name: '/statistics/check',
-        meta: { title: '检查项目统计', icon: 'list' }
-      },
-      {
-        path: 'workload',
-        component: () => import('@/views/error-page/404'),
-        name: '/statistics/workload',
-        meta: { title: '工作量统计', icon: 'list' }
-      }
-    ]
-  }
+  // {
+  //   path: '/statistics',
+  //   component: Layout,
+  //   redirect: 'noRedirect',
+  //   name: '/statistics',
+  //   meta: {
+  //     title: '数据统计',
+  //     icon: 'example'
+  //   },
+  //   children: [
+  //     {
+  //       path: 'revenue',
+  //       component: () => import('@/views/error-page/404'),
+  //       name: '/statistics/revenue',
+  //       meta: { title: '收支统计', icon: 'edit' }
+  //     },
+  //     {
+  //       path: 'sales',
+  //       component: () => import('@/views/error-page/404'),
+  //       name: '/statistics/sales',
+  //       meta: { title: '药品销售统计', icon: 'list' },
+  //       hidden: true
+  //     },
+  //     {
+  //       path: 'check',
+  //       component: () => import('@/views/error-page/404'),
+  //       name: '/statistics/check',
+  //       meta: { title: '检查项目统计', icon: 'list' }
+  //     },
+  //     {
+  //       path: 'workload',
+  //       component: () => import('@/views/error-page/404'),
+  //       name: '/statistics/workload',
+  //       meta: { title: '工作量统计', icon: 'list' }
+  //     }
+  //   ]
+  // }
 ]
 // 最终路由,这个页面不是在左侧菜单栏中
 export const lastRoute = [
